@@ -1,0 +1,175 @@
+\section{Teknologier}
+Når der skal udvikles web-applikationer, er der utroligt mange valg at træffe rent teknologimæssigt. Der skal træffes valg for både backend, frontend, database og alt derimellem. Hvis der skal være fancy animationer skal der så bruges html5 eller flash - eller silverlight? Skal backenden være php eller asp.net? Skal databasen være en postgresql, mssql eller mysql-database? Hvordan snakker backend og frontend sammen? xml, json eller noget helt tredje? Der er mange muligheder og i det følgende kapitel bliver de valg vi har truffet forklaret og begrundet.
+
+\subsection{MVC}
+Overordnet set har vi valgt at arbejde med \emph{Microsofts ASP.net mvc3 framework}. Dette giver en logisk opbygning i projektet, der bliver delt op i \emph{Model}, \emph{View} og \emph{Controller}. Udover, at det holder sig tæt op af den 3-lags arkitektur som vi har brugt i uddannelsen, giver det også øget overblik. Samtidig giver det mulighed for at bruge \emph{Microsofts Razor View Engine} \citep{razor} (Herefter blot Razor) der i forhold til tidligere løsninger som f.eks. web forms giver øget læsbarhed og enklere syntaks.
+\subsection{Database}
+\subsubsection{EntityFramework}
+I Equalsums bruges Devarts entity framework (Herefter EF) til at forestå kommunikation mellem database og backend. Da EF ud fra databasen selv konstruerer modeller er det en væsentlig forenkling i forhold til at bruge sql-sætninger. 
+
+I al sin enkelthed fortæller man EF, at man f.eks. gerne vil have fat i en kunde-objekt fra databasen, og herefter vil EF selv finde ud af, hvilke relationer der findes i databasen, og sørge for at hente al relevant data ud. Det samme gør sig gældende ved indsætning, hvor man laver et objekt med de ønskede attributter, og herefter fortæller EF at det skal gemmes i databasen, hvorefter de enkelte værdier bliver indsat i de forskellige tabeller med de rette relationer. Med andre ord, EF sørger selv for at foretage mapning mellem databaserelationer, og derudfra dannes et sæt af objekter. På denne måde undgår man, at skulle lave lange, komplicerede join-sætninger. Såfremt fremmednøgler og primærnøgler er korrekt definerede, kan alt dette overlades til EF. 
+\subsubsection{LINQ}
+LINQ \marginpar{\textbf{L}anguage \textbf{IN}tegrated \textbf{Q}uery} er som sådan ikke specifikt til brug for databaser, men da det er til at lave vores database-queries vi bruger LINQ, vil det blive nævnt i database-afsnittet.
+
+LINQ udmærker sig ved at lave sql-lignende kald. Forskellen er, at man kan bruge LINQ på andre datakilder end databaser, f.eks. arrays. LINQ gør brug af \emph{anonyme typer} og \emph{lambda-expressions} - disse er typer og funktioner der oprettes ad hoc, det vil sige, at de kun eksisterer så længe de bruges, og man undgår derved, at oprette en mængde klasser og metoder. I det følgende eksempel vises et linq-udtryk, hvor man i en graf vil have alle ikke-besøgte noder:
+
+\begin{figure}[H]
+\lstset{language = CSharp}
+\begin{lstlisting}
+var unvisitedNoteList = (select from n in nodeList
+																where n.visited == false
+																select n);
+\end{lstlisting}
+\caption{LINQ-kald der henter en liste af nodes}
+\label{fig: LINQ_first}
+\end{figure}
+
+En forespørgsel af denne type, ville resultere i en IEnumerable der indeholdt node-objekter (hvor egenskaben visited er falsk).
+
+Man kan også lave sine egne objekter, hvis man ønsker at hente specielle objekter. Dette vil blive yderligere uddybet på side \pageref{json} under "JSON".
+
+\subsubsection{Open Authorization (oAuth)}
+Open Authorization eller oAuth, er en standard for autorisering af f.eks. websiders brug af brugerkonti, uden at brugeren skal udlevere brugernavn og password. oAuth giver ganske enkelt en applikation adgang til en brugers konti uden at applikationen kender brugernavn og password. 
+
+Før denne forklaring, vil et par termer blive præciseret:
+\begin{description}
+\item[Bruger]
+Brugeren er ejeren af kontoen der skal tilgås, brugeren kender sit brugernavn og password.
+
+\item[Klient]
+Klienten er det program eller den side der skal tilgå brugerens konto. Klienten må ikke kende brugerens password.
+
+\item[Server] 
+Serveren er den entitet der holder styr på brugerens konto, og hvem der har adgang til den, serveren ved hvornår brugerens password er rigtigt\footnote{Det er dårlig skik at opbevare brugerens password i klar-tekst, et hash af brugerens password er at foretrække}.
+\end{description}
+
+Grundlæggende findes der to former for oAuth: 2-legged og 3-legged. Disse to former vil ganske kort blive forklaret, hvorefter det valg der er foretaget i forbindelse med dette projekt vil blive begrundet.
+
+\textbf{3-legged Authorization}
+Klienten sender en forespørgsel til serveren og modtager en usigneret access token, samtidig sendes brugeren videre til Serveren. Brugeren identificerer sig overfor serveren, hvorefter klienten modtager en signeret token, som er gældende for den specifikke session. Denne token sendes til klienten. Klienten kan nu bruge denne token til at signere fremtidige requests, og derved identificere sig over for serveren, som godkendt. Der er altså tre parter i denne transaktion, bruger, klient og server \citep{reilly}.
+
+\textbf{2-legged Authorization}
+2-legged authentication bruges hvor brugeren ikke kan identificere sig over for serveren ved starten af hver session. Det kan f.eks. være ved brug af applikationer på en mobil enhed. Istedet opretter brugeren en hemmelig nøgle, for hver klient. Klienten kender denne hemmelige nøgle og bruger den til at danne en access token, som bruges til at identificere sig som en af brugeren godkendt klient. I denne transaktion er der kun to parter, klient og server.
+
+Klienten får adgang uden, at brugeren fortæller klienten sit password. Samtidig kan brugeren sætte regler for hvilke rettigheder den enkelte klient har. Dette kendes især fra Facebook, hvor applikationer skal bede om specifikke tilladelser til f.eks. at skrive på brugerens væg, læse vennelisten osv.
+ 
+Vi vil i projektet benytte 2-legged authentication til at tilgå Googles api på vegne af brugeren. Vi kunne have valgt at bruge 3-legged, da denne er velegnet til brug ved websider, men da man skal identificere sig hver gang man starter en ny session (har haft browseren lukket), blev det vurderet, at det ville blive et irritationsmoment. Samtidig bruger EqualSums Google apps, hvilket muliggør 2-legged authentication. Vi valgte derfor 2-legged authentication, da det for brugeren tilbyder en langt smidigere login-oplevelse.
+
+\subsubsection{Google api}
+Google tilbyder api til stort set alle services, hvadenten det er maps, docs, calendar, mail eller noget helt andet. Projektet skal autentificere sig via 2-step authentification, og heldigvis har Google lavet et .net library der tilbyder både 2- og 3-step authentication.
+
+
+\subsection{Frontend}
+Det har altid været forbundet med stort besvær at udvikle hjemmesider der ser ens ud, og opfører sig ens i alle browsere. Dette skyldes at der findes en lang række standarder, og at alle browsere understøtter disse standarder i større eller mindre grad. Det har derfor været nødvendigt at benytte sig af workarounds og hacks, der udnytter de forskellige browseres svagheder og styrker. 
+
+I vores arbejde slipper vi for denne problemstilling, da systemet der udvikles, kun skal bruges internt. Eftersom EqualSums udelukkende bruger Google Chrome, er det kun nødvendigt at udvikle til en enkelt browser. I det efterfølgende vil brugen af forskellige front-end teknologier blive forklaret.
+
+\subsubsection{Razor View Engine}
+Som tidligere nævnt bruger vi Microsofts Razor View Engine, der er en ny view engine til asp.net. Fordelen ved at bruge Razor er, at der er en kraftigt forenklet syntaks. Samtidig er Razor smart nok til, selv at vide, hvornår der er tale om et @ der starter en blok, og hvornår det er @ i en e-mail adresse. Dette betyder også, at man ikke behøver markere når en razor-blok afsluttes, til forskel fra asp hvor man bruger \%$>$ og php hvor man bruger ?$>$. Når man starter en Razor kodeblok skriver man ganske enkelt @ efterfulgt at koden. Det er her vigtigt at huske, at der ikke skal semikolon efter blokken. 
+
+Dette øger læsbarheden af koden, og hastigheden hvormed man udvikler, da det er langt mere intuitivt.
+
+\subsubsection{jQuery}
+jQuery er et framework til javascript der virker i alle moderne browsere, og man skal som udvikler ikke bekymre sig om browser kompatibilitet. Grundideen bag jQuery er "Write less, do more". Som eksempel kan nævnes, at man har mulighed for at bruge css-selectorer (og pseudoselectorer) til at vælge elementer. Man slipper derfor for at bruge document.getElementById og andre mærkelige konstruktioner, da man kan gribe direkte ned i DOM-træet\marginpar{\textbf{D}ocument\\\textbf{O}bject\\\textbf{M}odel}\footnote{Den grundlæggende opbygning af et html-dokument}. Man kan f.eks. vælge den første række i tabellen med id "customers" ved at skrive 
+
+\lstset{language = javascript}
+\begin{lstlisting}
+$("\#customers:first-child") 
+\end{lstlisting}
+
+Udover det er meget nemmer at vælge et bestemt element, er det også nemt at manipulere elementerne uanset, om man vil ændre, tilføje eller fjerne indhold, tekst, css-egenskaber eller værdier.
+
+Denne fleksibilitet sammen med en lang række indbyggede funktioner til animationer gør jQuery til et effektivt redskab, når der skal bruges Javascript på en side. Desuden gør jQuerys popularitet, at der findes en lang række plugins, som tilføjer næsten enhver funktionalitet man kan tænke sig.
+
+\subsubsection{AJAX}
+I forbindelse med kommunikation mellem front-end og backend vil vi i høj grad benytte \marginpar{\textbf{A}synchronous \textbf{J}avascript \textbf{A}nd\\ \textbf{X}ML} AJAX, som muliggør asynkron kommunikation mellem klient og server. Dette betyder, at der kan hentes og sendes data uden, at siden skal refreshes. På den måde får brugeren en langt bedre og flydende oplevelse, end hvis der skulle refreshes hver gang klienten skulle sende eller forespørge data fra serveren. Dette er med til at højne brugervenligheden.
+
+Et sted hvor man bruger AJAX, er ved autofuldførelse, som f.eks. kendt fra Google-søgninger. Har man en debugger der overvåger serverrequests, som f.eks. Firebug mens man skriver sin søgning, vil man se, at der bliver sendt en request for hvert tastetryk. Dette er AJAX-requests der bliver sendt.
+
+Netop brugen af jQuery gør det langt nemmere at benytte sig af asynkrone kald, idet der i jQuery findes en indbygget funktion til at sende asynkrone forespørgsler til serveren, der forenkler processen, som det ses i figur \ref{fig: jQuery}
+
+
+\begin{figure}[H]
+\lstset{language = javascript}
+\begin{lstlisting}
+var data = {userId: 4}
+var url = {"CRMsystem/feedDetails/getUserName"}
+
+$.getJSON{url, data, function(data){
+	$("#customerName").text(data);
+}
+\end{lstlisting}
+\caption{Asynkront jQuery-kald}
+\label{fig: jQuery}
+\end{figure}
+\subsubsection{JSON} \label{json}
+\marginpar{\textbf{J}ava\textbf{S}cript \textbf{O}bject \textbf{N}otation}
+Vi har dog valgt at benytte JSON istedet for XML som dataformat til AJAX-requests. Først og fremmest skyldes dette, at JSON er lavet specielt til Javascript, men samtidig er der langt mindre data der skal sendes frem og tilbage, da data ikke skal markeres på samme måde som XML hvorved der er langt mindre overhead:
+\begin{figure}[H]
+\lstset{language = xml}
+\begin{lstlisting}
+<?xml version="1.0" encoding="UTF-8"?>
+<persons>
+	<person>
+		<firstName>Thomas</firstName>
+		<lastName>Hansen</lastName>
+		<address>Guldvej 23</address>
+		<city>Aalborg</city>
+		<zipCode>9000</zipCode>
+		<email>thomas@gmail.com</email>
+	</person>
+</persons>
+
+\end{lstlisting}
+\caption{XML-eksempel}
+\label{fig: bigXml}
+
+\end{figure}
+\lstset{language=javascript}
+
+\begin{figure}[H]
+\begin{lstlisting}
+person[
+	{
+		firstName: "Thomas", 
+		lastName:"Hansen", 
+		address: "Guldvej 23", 
+		city: "Aalborg", 
+		zipCode: 9000, 
+		email:"thomas@gmail.com"
+	}
+]
+
+\end{lstlisting}
+\caption{JSON-eksempel}
+\label{fig: bigJson}
+
+\end{figure}
+Som det ses af figur \ref{fig: bigXml} og \ref{fig: bigJson}  er JSON-objekter langt enklere end XML-objekter, i det viste eksempel er der tale om et array (omgivet af []) med et enkelt objekt. Et objekt er omkranset af \{ og \}. 
+
+At JSON er simpelt, er både en fordel og en ulempe. Når der skal sendes data fra serveren til klienten, kan man ikke bare tage et objekt der er hentet fra databasen og serialisere det som JSON. Der opstår problemer i forbindelse med cirkulære referencer. Dette skyldes en begrænsning i EF som Microsoft er opmærksomme på \citep{circRef}. Indtil der foreligger en løsning, skal der benyttes en workaround, hvor man laver sine egne, speciallavede objekter via projection selector'en $select$ \citep[pp. 75-80]{rattz2010pro}. Eksemplet i figur \ref{fig: LINQ_second} tager udgangspunkt i fig. \ref{fig: LINQ_first}:
+
+\begin{figure}[H]
+\lstset{language = CSharp}
+\begin{lstlisting}
+var unvisitedNoteList = (select from n in nodeList
+																where n.visited == false
+																select new {
+																	name = n.name,
+																	value = n.value,
+																	visited = visited
+																});
+\end{lstlisting}
+\caption{LINQ-kald der henter en liste af nodes, der er klar til JSON}
+\label{fig: LINQ_second}
+\end{figure}
+
+Med dette kald får man et objekt der indeholder egenskaberne name, value og visited. Denne brug af projektion-keyword'et select betyder, at de anonyme objekter serialiseres bagefter.
+
+\subsubsection{CSS3}
+Brugen af CSS3 giver en lang række muligheder for at lave langt mere elegant design, her kan bl.a. nævnes brug af gradienter og afrundede hjørner. CSS3 er endnu ikke understøttet af alle browsere, og ved visse egenskaber (som f.eks. border-radius), skal der benyttes en egenskab for hver af de 3 browser-engines (Webkit, Mozilla og IE). Som tidligere nævnt bliver der ikke problemer med cross-browser kompatibilitet.
+
+\subsection{Versionstyring - SVN}
+Til versionsstyring har benyttet SubVersion (SVN). Det er et open source system som også benyttes hos EqualSums, så det var meget naturligt at gøre brug af det også. Det er et utroligt vigtigt redskab til at styre sin sourcekode. 
+
+Hos EqualSums har vi en server hvor vores repository ligger med koden på. Man kan så lave et checkout med TortoiseSVN, hvilket betyder man får en lokal kopi. Når man har lavet nogen ændringer i koden, kan man commit det igen til sit repository, hvor det så vil bliver merged med de eksisterende filer. På den måde har alle altid adgang til den nyeste kode. Skulle der bliver uploadet noget kode som man fortryder kan man lave en roll back til en tidligere revision.

@@ -1,0 +1,53 @@
+\section{Kravspecifikation}
+EqualSums har stille en opgave der omhandler udvikling af et CRM system. Det de primært var interesseret i at få udviklet var deres håndtering af kunder. Hvor fokus ville være den måde salgsafdelingen håndtere kunderne på. Da det kun var en lille del af programmet vi skulle lave, blev der stillet krav om at programmet nemt skulle kunne udvides og vedligeholdes.
+ 
+Selve produktet skulle kunne vise og håndtere alle firmaets kunder, og potentielle kunder. Der skal kunne laves aftaler med de forskellige leads, som også bliver noteret i sælgernes Google-kalender. Derudover skal der være mulighed for at skrive noter på en lang række af de data der er i systemet. Der blev også stillet krav om at kunne sende mails direkte fra programmet, samt hente gamle mails frem.
+
+Det de i bund og grund ønskede, var en effektiviseret kopi af det Google docs regneark de bruger nu, hvor man samtidig har styr over hvad man præcist har aftalt og har haft aftalt med kunderne.
+
+Systemet vil overordnet indeholde tre sider, Min side, Leads Oversigt og leads detajler. I det følgende vil det kort blive forklaret hvilke opgaver det tænkes der skal løses på hver af de tre sider:
+
+\subsubsection{"Min Side"}
+Min Side vil være en oversigts side, hvor man har vist sin kalender, en liste over dagens gøremål. Det vil være her man starter på når man er logget ind for hurtigt at kunne danne sig et overblik over hvad der skal laves i løbet af dagen.
+\begin{itemize}
+	\item Der skal være en oversigt over dagens opgaver, for at gøre det hurtigt og nemt at overskue de opgaver man har for dagen
+	\item Mulighed for at fjerne en opgave når den er løst, så man ikke længere skal se og tænke på den
+	\item Medarbejderens kalender skal vises på siden så man hurtigt og nemt kan se hvilken aftaler man har i løbet af måneden, og dermed også nemmere kan planlægge nye aftaler
+	\item Man skal kunne se detaljer for dagens opgaver så man kan få en mere præcis beskrivelse af hvad der skal laves
+	\item Sortere dagens opgaver så man bedre kan styre hvilken rækkefølge man vil lave dem i
+\end{itemize}
+
+
+\subsubsection{"Leads Oversigt"}
+Leads Oversigt er en stor tabel over alle de Leads der er i systemet. Her vil være forskellige sorterings muligheder for at kunne finde frem til de leads man vil arbejde med. Tabellen vil vise de vigtigste informationer omkring leadet, så man nemt og hurtigt kan finde den information man er ude efter. Det er også her man kan oprette nye leads, enkeltvis eller via en kommasepareret fil (.CSV). 
+\begin{itemize}
+	\item Der skal være en oversigt over alle Leads, så man nemt kan finde de leads man har i systemet og læse deres vigtigste data
+	\item Mulighed for at sortere leads efter de viste data så man kan få en liste over præcis de leads man ønsker at arbejde med
+	\item Man skal kunne opdatere data på leads, så de stemmer overens med virkeligheden
+	\item Der skal være mulighed for at afmærke flere leads og opdatere samme felt på dem på én gang, så man slipper for at skulle rette det samme data på mange forskellige leads
+	\item Der skal kunne uploades en CSV fil, med en masse leads så man slipper for at skulle indtaste disse en ad gangen. Der skal samtidig tjekkes for dubletter så man ikke får 	de samme leads flere gange
+	\item Der skal være en blank plads i bunden så man manuelt kan oprette et enkelt lead
+	\item Skal kunne tilføje en ny kolonne dynamisk i oversigten, så man dynamisk kan tilføje flere data at sortere efter
+\end{itemize}
+
+
+\subsubsection{"Lead Detaljer"}
+Lead Detaljer indeholder en simpel liste af leads til venstre hvor der vil være nogle få sorterings muligheder. Der kan vælges leads ud fra denne liste så man kan få vist alle deres stamdata. Her vil også være mulighed for at se hvilken kontakter man har med leadet.(Kontaktpersoner). Der vil der også være mulighed for at se alle de aftaler man har lavet med dem. Det kan være møder, telefon møder, kurser etc. Her vil der evt. også være vedhæftet en note som man også kan hente frem. Derudover vil der også være noter til både firmaet, kontakter og mails. Der kan også sendes mail fra denne side, samt se tidligere mailkorrespondancer med den valgte kontakt.
+\begin{itemize}
+	\item Man skal kunne sortere efter lead status, samt EqualSums-medarbejder så man nemt kan få en præcis liste af leads man vil se dejtalerne på
+	\item Se alle stamdata på et lead, samt en liste af dets kontakter(Kontaktpersoner) så man kan få en dejtaleret information omkring Leadet.
+	\item Man skal kunne se stamdata på en valgt kontakt indenfor det valgte lead, så man nemt kan se de oplysninger der er gemt omkring kontakten
+	\item Man skal kunne rette de stam data der er på både Lead og kontakt, så de stemmer overens med virkeligheden
+	\item Der skal være mulighed for at kunne oprette en ny kontakt på leadet, så man har en bedre mulighed for at kontakte firmaet
+	\item Upload CSV fil med kontakter til et bestemt lead, så man ikke skal indtaste dem manuelt, her tjekkes også for dubletter så man ikke oprette den samme kontakt to gange
+	\item Der skal kunne oprettes noter på leads og kontakter, så man senere kan slå op og læse noten omkring leadet eller kontakten. Derudover skal der også være noter på de Actions(aftaler) man laver med kontakten
+	\item Finde gamle noter frem på både leads og kontakter, så man kan se hvad der er blevet skrevet omkring leadet eller kontakten før i tiden
+	\item Oprette en aftale med et lead eller kontakt(aftale kan være møder, telefon opkald, kurser osv.). aftaleren oprettes også i medarbejderens Google-kalender
+	\item Der skal kunne oprettes noter på aftaler, hvis man skal huske noget specielt omkring aftalen kan man skrive en note omkring det så man er sikker på at huske det
+	\item Find gamle aftaler frem igen samt tilhørende noter, så kan man hurtigt se hvad man egentlig har lovet og aftalt med en kunde, især hvis der opstår uenighed omkring aftaler
+	\item Skal kunne sende en e-mail til den valgte kontakt, samt vedhæft dokumenter i denne. Så slipper man for at skulle åbne et 3. parts program for at skrive en e-mail
+	\item Man skal også kunne vedhæfte filer til sin e-mail
+	\item Der skal være en historik over sendt og modtaget post mellem EqualSums-medarbejderen og kontakten, så man igen kan finde historikken frem og bekrafte hvad der egentlig er blevet aftalt
+\end{itemize}
+
+

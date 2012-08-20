@@ -1,0 +1,33 @@
+For at hjælpe med at give et bedre overblik over systemet og hvordan de forskellige lag snakker sammen i forhold til hinanden, vil arkitekturen blive beskrevet her. 
+
+\section{Arkitektur}
+
+Da vi bruger MVC 3 har vi en stor del af vores grundstruktur. MVC som står for Model, View, Controll er også delt op i netop disse tre lag. 
+
+\begin{figure}[H]
+	\centering
+		\includegraphics[width=1.00\textwidth]{arkitektur.jpg}
+	\caption{Arkitektur}
+	\label{fig:arkitektur}
+\end{figure}
+
+Som det kan ses på figur \ref{fig:arkitektur} er MVC kun en del af arkitekturen. Der er implementeret et Repository pattern, for at opnå en række fordele, som vil blive beskrevet i et senere afsnit. MVC controlleren står for at skrive til de klasser der er implementeret af repository pattern. Controlleren vil sende et objekt ned til sit repository, som skriver det til databasen. Det skal ses som et data access lag, det er her alt kontakt med databasen starter og stopper. Vores repositories vil hedde CompanyRepository.cs mens interfacet til denne vil hedde ICompanyRepository.cs. Navnet fortæller selvfølgelig noget omkring hvilket område dette repository bruges.
+
+På figur \ref{fig:arkitektur} ses cirkelen kaldet Model. Det er vores klassiske modellag som man også kender det fra 3-lags arkitekturen. Det er i dette lag domænemodellen bliver realiseret. Da der bruges Entity Framework styrer dette framework laget for os, og det vil derfor virke tomt. Der benyttes Database First tilgangen til at modellere laget ud fra designet af databasen. Derved bruges Entity Frameworket det meste af tiden til at styre dette lag. Vi laver dog nogle modelklasser manuelt så som wrapper-klasser, eller ViewModels. Disse kunne blandt andet bruges hvis man vil sende to entity klasser til samme view. Eller har brug for nogle flere properties, som man ikke er interesseret i bliver gemt i databasen. Der vil komme eksempler på disse senere i rapporten.
+
+View på figur \ref{fig:arkitektur}, er det grafiske interface, som står for at vise den HTML brugeren skal se. Et View benyttes ofte sammen med en model. Det vil sige et objekt med en række properties som man ønsker vist i viewet. Det kunne være et Company objekt der bliver sendt som model, hvor efter viewet har adgang til dens properties. Her er også mulighed for at bruge IEnumerables hvis det er lister man vil skrive ud. Hvis man har en web-form på siden er det muligt at sende samme type objekt tilbage til controlleren, med alle de nye properties man har sat i web-formen. Et view vil ligge en mappe af samme navn som den controller den høre til. De vil typisk have et navn der forklare indholdet af siden, f.eks. Company.cshtml.
+
+Normalt er det meningen, at view- og modellaget er skarpt adskilt af controllerlaget, så model og view aldrig kommunikerer direkte. Frameworket er dog skruet sådan sammen, at controlleren sender et model-objekt direkte til viewet. 
+
+Controller på figur \ref{fig:arkitektur} er vores controllerlag. Controlleren styrer hvad der sker i applikationen, og står for at få vist de rigtige views. Den vil minde meget om det controllerlag man også ser i 3-lags arkitekturen. Det er her vi modtager input fra brugeren og opretter objekter som vi sender videre ned til vores data access lag. (Repository pattern). Alle controllere hedder Controller til sidst. Altså en controller til at styre sine companies ville oplagt hedde CompanyController.cs. Dette er bestemt af MVC 3. 
+
+Selve mappe- og filstrukturen bliver selvfølgelig i høj grad bestemt af MVC, men for at gøre overblikket af systemet totalt vil vi kort beskrive strukturen her.
+
+\begin{figure}[H]
+	\centering
+		\includegraphics[width=1.00\textwidth]{mappestruktur.jpg}
+	\caption{Mappestruktur}
+	\label{fig:Mappestruktur}
+\end{figure}
+
+I roden af projektet vil man finde nogle config filer med forskellige opsætninger af sitet. Blandt andet SQL forbindelse. Der udover bruges Content til alle CSS filerne, Scripts til JavaScript og jQuery frameworket. I Repository ligger repository klasserne samt deres interface. Controllers, Models og Views er MVCs struktur, og burde være selvforklarende. Mere interessant er Areas \citep[pp. 374-381]{freeman2011pro} som er MVCs måde at lave sub-directories på. Hver mappe i et Area får nemlig hver sin Controllers, Models og Views mappe som virker på samme måde som dem i Root mappen. Det gør det nemt at flytte en del af systemet ud i et sub-directory, da alt vil opføre sig på samme måde såfremt det ligger i samme sub-directory.

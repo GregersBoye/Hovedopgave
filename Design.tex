@@ -1,0 +1,62 @@
+\section{Design}
+\subsection{Domænebeskrivelse}
+Her vil de forskellige klasser og deres associationer kort blive forklaret. Først beskrives klassen, og derefter forklares hvordan associationerne hører til denne klasse. \par
+\begin{description}
+		\item[Action] Svarer til en aftale der er aftalt mellem en employee og contact. Kunne være et møde.\\
+		\textbf{Contact:} Der kan være tilknyttet en eller flere kontakter til en action. Der vil altid mindst deltage 1 men nogen gange flere.\\
+		\textbf{Employee:} Her vil der også være mulighed for at der er flere der deltager. Igen vil der ikke være en action uden en Employee.
+		\item[Notes]  En Note er en lille besked tilknyttet de klasser den har asscociationer til. Meget simpel klasse.
+		\item[Employee] Indeholder de vigtige informationer der kræves af en medarbejder i virksomheden. \\
+		\textbf{Company:} Viser hvilken medarbejder der ejer dette firma(Lead). En ansat kan eje flere virksomheder, men ikke eje et som allerede er ejet af en anden. Han kan også eje 0 virksomheder, da han kan have en anden stilling end Sælger.\\
+		\textbf{Course:} Viser om denne medarbejder deltager i dette kursus.
+		\item[Company]  Company indeholder stamdata omkring firmaet(Leadet) \\
+		\textbf{Contacts:} Viser hvilken kontakter der tilknyttet dette firma. Der kan være flere kontakter men de vil naturligt kun være tilknyttet et firma. Der kan også være 0 kontakter hvis der endnu ikke er skabt kontakt til firmaet.\\
+		\textbf{Employee:} Viser hvilken ansat der ejer virksomheden. Her vil altid kun være en ejer.
+		\item[Contact]  Indeholder de vigtige informationer omkring en kontakt. \\
+		\textbf{Company:} Viser hvilket firma kontakten er en del af.\\
+		\textbf{Course:} Viser om denne kontakt har forbindelse til et kursus.
+		\item[Course] Indeholder data omkring et kursus.\\
+		\textbf{Contact:} Viser hvilke kontakter der er tilknyttet dette kursus.\\
+		\textbf{Employee:} Viser hvilke medarbejdere der er tilknyttet dette kursus. \\
+		\textbf{Participants:} Viser hvilke kursister der er tilknyttet dette kursus.
+		\item[Participants] Virker som en klasseliste for et kursus. En liste over deltagere som ikke nødvendigvis er kontakter. \\
+		\textbf{Course:} Viser hvilket kursus listen er tilknyttet. Der vil kun være et kursus pr. liste samt der selvfølgelig kan deltage mange til hvert kursus.
+\end{description}
+
+\subsection{Domænemodel}
+Vi har lavet en domænemodel for at give et bedre overblik over det problemområde vores projekt omhandler. Modellen hjælper os og andre med at forstå hvordan systemet er bygget op. Den viser sammenhængen mellem de forskellige klasser. Navnene på klasserne fortæller hvad vi har med at gøre, mens attributterne fortæller noget om klassens egenskaber. 
+
+\begin{figure}[H]
+	\centering
+		\includegraphics[width=0.75\textwidth]{domainModel}
+	\caption{Domænemodel}
+	
+\end{figure}
+
+Det kan ses på modellen at en Employee ikke har direkte forbindelse til Contact, men i stedet har forbindelsen til Company. Dette er fordi de altid vil have alle firmaets kontakter. Action og Course er sat til Contact i stedet for Company for at en ansvarlig kontaktperson til netop den Action eller Kursus. Derudover er Participants sat ind for sig selv da det kan være ansatte i firmaet som man ellers ikke har nogen kontakt til.  Support-System er resten af det system der blev lavet under vores praktikophold. Modellen bag det har vi valgt at lave på denne måde for at holde de to projekter adskilt.
+		
+\subsection{Databasestruktur}
+Database designet er lavet ud fra domæne modellen. Vi har forsøgt at holde tabellerne så simple som muligt, det vil sige vi ikke blander data sammen. Derudover forsøger vi at undgå null værdier samt redundans. Sidst vil vi normalisere databasen op til og med Boyce-Codd Normalform for at give os et bedre design, hvor vi minimerer redundans og opdaterer, indsætter og sletter uregelmæssigheder. 
+
+Som det ses på domæne modellen er der flere steder mange-til-mange relationer. For at styre dette i database sammenhæng sættes en tabel ind imellem. Her vil de to fremmed nøgler til sammen lave en primær nøgle. Det kan blandt andet ses ved Employee og Action. Her vil der blive sat en ny tabel ind, som indeholder de to fremmed nøgler, som dens primære nøgle. 
+
+De steder hvor der er 1-til-mange relationer vil der blive sat en fremmednøgle på den tabel der er mange af. Eksempelvis vil Company have mange kontakter, der sættes en fremmednøgle på kontakten så den altid kan se hvilket firma den hører til. 
+Hvis der havde været 1-til-1 relationer vælges en af tabellerne og vil fremmednøglen ofte blive lagt på den tabel med mindst værdier som peger på den. Man vil også forsøge at ligge nøgler således man undgår nulls.
+
+1. NF kan blandt andet ses i vores Kontakt tabel hvor navnet på kontakten er delt op i fornavn og efternavn, altså atomare data.
+
+2. NF kan ses flere steder i database da vi ikke har nogen attributter der er afhængig af dele af en nøgle.  
+
+3. NF ses i det klassiske eksempel med post nummer og by. Da disse er afhængige af hinanden, og den primære nøgle flytter vi ud i en tabel for sig selv. 
+\citep[p.348-361]{elmasri2007fundamentals}
+
+\subsubsection{Beskrivelse af databasemodel}
+Vi vil her beskrive sammenhængen mellem nogen af de tabeller hvor man ikke umiddelbart kan se hvad der menes.
+
+\textbf{Company:} Denne tabel har flere tabeller knyttet til sig som kun indeholder en primær nøgle samt en enkelt attribut.(CompanyStatus, CycleState og CompanyTypes) Vi har lagt dem ud i tabeller for sig, fordi vi skal kunne søge og sortere på dem. Det er lister med fastsatte værdier som kunden skal kunne vælge ud fra.
+
+\textbf{Titles:} Titles har to mange til mange tabeller, det er fordi en Employee kan have flere titler, samt mange titler kan have adgang til de samme steder i programmet. Det bruges til at styre hvor de forskellige Employees har adgang i programmet.
+
+\textbf{Notes:} For at undgå at få en masse null værdier har vi valgt at oprette en række nye tabeller som ligner det man gør ved mange til mange relationer. Her skal man dog være opmærksom på det faktisk kun er en, en til mange relation.  
+
+\textbf{ValueList:} Kunden vil være i stand til at oprette dynamiske kolonner af bestemte typer. Derfor har vi lavet denne tabel som indeholder data samt en fremmed nøgle til infoList som fortæller hvilken type data vi skal sorterer efter og hvad kolonnens navn er. Disse dynamiske kolonner er ens for alle Companies.

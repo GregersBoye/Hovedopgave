@@ -1,0 +1,923 @@
+\chapter{Projektforløb}
+Her vil blive forklaret hvordan projektet er planlagt, og gå mere i detaljer omkring de enkelt spændende områder i hvert sprint. Sprintet vil kort blive gennemået hvorefter der vil blive kigget nærmere på nogle kodeeksempler.
+
+I de fire sprints som forløbet strækker sig over, er hvert sprint delt op i 2 uger hvor af ca. 2½ dag om ugen går med programmering mens de sidste uger af forløbet går over i ren rapportskrivning. Denne struktur er valgt, for at få skrevet lidt ned, mens det man har lavet stadig er nyt og friskt i hukommelsen. Ved ikke at lave for lange sprints får man oftere feedback på produktet hvilket betyder, at man hurtigere kan rette til når eller hvis der kommer ændringer.
+
+\section{Product Backlog}
+Product backloggen er en liste af alle de user stories der indgår i projektet. Den er med til at give et godt overblik over hvad der mangler at blive lavet. Der kan løbende blive tilføjet nye user stories til product backloggen, som eventuelt kan blive taget med i det næste sprint. \ref{fig:Sprint 1 backlog}
+\begin{figure}[H]
+	\centering
+		\includegraphics[width=1.00\textwidth]{Backlog.jpg}
+	\caption{Backlog}
+	\label{fig:Backlog}
+\end{figure}
+
+\section{Sprint 1}
+I det første sprint vil der altid gå tid med at få sat arbejdsmiljø op, men da der skulle arbejdes videre på et projekt som allerede havde sat op, var meget af dette allerede på plads. Der skulle dog laves lidt, da der skulle omstruktureres på opbygningen af projektet ved hjælp af Areas i MVC 3. Derudover blev der også en del refactoring af gamle klasser, fordi der blev lavet en hel del om i database designet, så systemet kunne understøtte al den nye funktionalitet.
+
+\subsection{Sprint backlog}
+Der blev ikke sat så mange user stories ind i dette sprint for få en god buffer til uventede problemer med arkitekturen og opstart af projektet. Der var også lidt usikkerhed omkring hvor meget der kunne laves på et sprint. 
+Kolonnen "Effort" er det antal timer der er givet hver User Story. Der kan maximalt klares 53,2 i et sprint, og det viste sig at passe ret godt i første sprint. 
+\begin{figure}[H]
+	\centering
+		\includegraphics[width=1.00\textwidth]{Sprint1Backlog.jpg}
+	\caption{Sprint 1 backlog}
+	\label{fig:Sprint 1 backlog}
+\end{figure}
+
+\subsection{Burndown Chart}
+Som burndown chartet viser, blev de første opgaver løst hurtigere end forventet, men det udlignede sig senere. Bufferen som bevidst var blevet sat ind i dette sprint for at få en god start, blev der heldigvis ikke brug for. Det ses også i form af, at alle opgaver var løst en dag før sprintets deadline.
+\begin{figure}[H]
+	\centering
+		\includegraphics[width=1.00\textwidth]{Sprint1Burndown.jpg}
+	\caption{Sprint 1 Burndown Chart}
+	\label{fig:Sprint 1 Burndown Chart}
+\end{figure}
+
+\subsection{Udførelse af Sprint 1}
+Vi startede med at gøre arbejdsmiljøet klar til kunne håndtere den del af programmet der skulle håndtere salgsafdelingens område. MVC 3 er heldigvis utrolig fleksibelt og vedligeholdsvenligt så det gik nemt. Der opstod ikke nogen særlige problemer med hensyn til opsættelse af arbejdsmiljøet.
+
+\subsubsection{User story - Upload data}
+\textit{"`Som Sælger vil jeg kunne uploade hele dokumenter (cvs) med leads, så jeg kan tilføje mange kontakter på én gang. Så jeg hurtigt kan importere mange kontakter i stedet for at taste dem enkeltvis."'}
+
+Som user story'et beskrive skal der kunne uploades en kommasepareret fil med leads, som efterfølgende skal skrives ind i databasen. Her skal der selvfølgelig tjekkes om der er dubletter så der ikke uploades de samme leads flere gange. En dublet vil være et lead med samme CVR nummer. Skulle der være dubletter i filen vil man bliver ledt over på en siden på figur \ref{fig: csv-dubletter} hvor man vil se en liste med unikke leads og en liste med dubletter. Listen øverst er unikke leads, mens den nederste liste er dubletter fundet ud fra CVR-nummer. Her skal man så vælge den dublet man vil bruge, ved at afkrydse checkboxen ved siden af. Grunden til man skal kunne vælge er at der sagtens kan være flere leads med samme CVR nummer i listerne, men med nyere stamdata. Det er så op til sælgeren at vurdere hvilke data er de nyeste.
+
+\begin{figure}[H]
+	\centering
+		\includegraphics[width=.50\textwidth]{csv-dubletter.jpg}
+	\caption{Liste af nye Leads og dubletter i csv-filen.}
+	\label{fig: csv-dubletter}
+\end{figure}
+
+Undervejs i upload processen tjekkes der for dubletter i CSV filen, og dernæst i databasen inden der skrives hertil.
+
+Det er kun den nederste liste man skal vælge fra. Det er et af de steder vi gerne ville have haft tiden til at lave UI'et lidt om. Istedet for checkboxes skulle der være radiobuttons, da man kun skal kunne vælge ét lead med samme CVR nummer, samt der selvfølgelig ikke skal være nogen valgmulighed ved de unikke leads. Der var problmer med at få grupperet radioknapperne ordenligt via razor. Så alternativet var at lave det om senere, og styre det via JavaScript og jQuery. Det nåede vi desværre aldrig. 
+
+Den ønskede CSV fil vælges ved hjælp af en simpel Web-form som man kan finde på Leads-oversigts siden som vist på figur \ref{fig: csv-form}. Det er vigtigt at et leads stamdata står i den rigtige rækkefølge fordi metoden ikke kan skelne mellem hvilke data det er den læser. Stamdata på et lead vil være oplysnigner som CVR-nr, firmanavn, addresse, website osv.
+
+\begin{figure}[H]
+	\centering
+		\includegraphics[width=0.70\textwidth]{csv-form.jpg}
+	\caption{Webform til upload af CSV-fil}
+	\label{fig: csv-form}
+\end{figure}
+
+Metoden i figur \ref{fig:csvupload} tjekker som det første om filen overhovedet er blevet uploadet korrekt. Såfremt alt går godt, bliver filen kopieret over på serveren, hvorefter stien til filen bliver sendt videre til metoden i figur \ref{fig: CSV-Reader} som er metoden der læser filen, mere om den senere.
+
+\begin{figure}[H]
+\lstset{language = CSharp}
+\begin{lstlisting}
+[HttpPost]
+public ActionResult UploadCSV()
+{
+List<List<CSVCompanyWrap>> tempList = new List<List<CSVCompanyWrap>>();
+            CSVList cvsList = new CSVList();
+            try
+            {
+                HttpPostedFileBase file = Request.Files["uploadCSVContacts"];
+                if (file != null && file.ContentLength > 0)
+                {
+                    string fileName = file.FileName;
+                    string path = System.IO.Path.Combine(Server.MapPath("~/Uploads"), fileName);
+                    file.SaveAs(path);
+
+                    tempList = CSVReader(path);
+
+                    cvsList.Companies = tempList[0];
+                    cvsList.Doubles = tempList[1];
+                }                
+            }
+            catch(Exception e)
+            {...}            
+
+            return View(cvsList);
+        }
+\end{lstlisting}
+\caption{Metode til upload af CSV-fil i ContactListController.cs.}
+\label{fig:csvupload}
+\end{figure}
+
+Da man kan sende objekter til vores UI med MVC 3, er der blevet lavet en wrapper klasse til at styre hvilke Company objekter der er blevet valgt på UI'en via checkboxes. Se evt. Arkitektur afsnittet for uddybelse af Models og Views. 
+
+CSVCompanyWrap er en wrapper-klasse til Company objekter da der skal være mulighed for at kunne vælge hvilke leads der skal sorteres fra ved hjælp af checkboxes. CSVCompanyWrap indeholder to simple Properties, en bool til at styre om checkboxen er markeret eller ej(true/false) og en property til det givne Company objekt. Ved at lave det på denne måde kan vi bruge MVC 3 til at sende en viewmodel til viewet på figur \ref{fig: csv-dubletter}. Når man så laver en http-post sendes vores viewmodel tilbage til ContactListController hvor de forskellige checkboxe er valgt til og fra. 
+
+CSVList er det vi kalder en ViewModel og indeholder to lister med CSVCompanyWrap objekter, dette er også den model vores view i figur \ref{fig: csv-dubletter} forventer at modtage. De to lister svare til en række leads og en række dubletter. 
+ 
+\begin{figure}[H]
+\lstset{language = CSharp}
+\begin{lstlisting}
+private List<List<CSVCompanyWrap>> CSVReader(string filePath)
+{
+	List<List<CSVCompanyWrap>> fullList = new List<List<CSVCompanyWrap>>();
+  List<CSVCompanyWrap> companies = new List<CSVCompanyWrap>();
+  List<CSVCompanyWrap> dublets = new List<CSVCompanyWrap>();            
+  try
+  {
+  	using (StreamReader reader = new StreamReader(filePath))
+    {
+    	string line;
+      while ((line = reader.ReadLine()) != null)
+      {
+      	string[] lines = line.Split(';');
+        short number;
+        CSVCompanyWrap cw = new CSVCompanyWrap()
+				{
+        	Company = new Company()
+          {
+          	...       
+          },
+          Choosen = false
+        };
+
+        if (companies.Where(x => x.Company.Cvr.Equals(cw.Company.Cvr)).FirstOrDefault() != null)
+        {
+        	dublets.Add(cw);
+          dublets.Add(companies.Where(x => x.Company.Cvr.Equals(cw.Company.Cvr)).Single());
+          companies.Remove(companies.Where(x => x.Company.Cvr.Equals(cw.Company.Cvr)).Single());
+        }
+        else if (dublets.Where(c => c.Company.Cvr.Equals(cw.Company.Cvr)).FirstOrDefault() != null)
+        {
+        	dublets.Add(cw);
+        }
+        else
+        {
+        	companies.Add(cw);
+      	}
+    	}
+  	}
+  }
+  catch (Exception e)
+  {...}
+  fullList.Add(companies);
+	fullList.Add(dublets);
+	return fullList;
+}
+\end{lstlisting}
+\caption{Metode til læsning af CSV-fil i ContactListController.cs.}
+\label{fig: CSV-Reader}
+\end{figure}
+
+Metoden i figur \ref{fig: CSV-Reader} læser den uploadet CSV fil og splitter den op hver gang den støder på et ";". For hver linje i filen bliver der lavet et CSVCompanyWarp objekt, med et Company objekt, som stammer fra vores Entity framework, og en false bool.
+
+Derefter tjekkes der så om entity klassen Company eksistere i enten listen af dubletter eller companies. Findes den allerede bliver de flyttet til dubletter listen ellers bliver de lagt i companies listen. Det er ikke kun dubletten der bliver flyttet over i dubletter listen. Det gør begge objekter da der senere skal vælges hvilken der er rigtig, som forklaret tidligere er det op til sælgeren at vurdere hvilket lead har de nyeste data.
+
+Til sidst sendes de to lister tilbage til UploadCSV.cshtml som vist på figur \ref{fig: csv-dubletter}. Her skal brugeren igen tage stilling til om hvilke data er de rigtige. Det er nemlig ikke nødvendigvis det nyeste eller rigtige data som findes i CSV filen.
+
+\begin{figure}[H]
+\lstset{language = CSharp}
+\begin{lstlisting}
+[HttpPost]
+public ActionResult SortDublets(CSVList csv)
+{
+    CSVList cvsList = new CSVList();
+
+    foreach(var item in csv.Doubles)
+    {
+        if(item.Choosen)
+        {
+            item.Choosen = false;
+            csv.Companies.Add(item);
+        }
+    }            
+    cvsList.Companies = csv.Companies;
+
+    return View("ConfirmCSV", cvsList);
+}
+
+\end{lstlisting}
+\caption{Metode til sorting af dubletter i ContactListController.cs.}
+\label{fig: Dublet-Sortering} 
+\end{figure}
+
+I figur \ref{fig: Dublet-Sortering} ses en simpel metode der flytter dubletter over i companies listen ud fra hvilken dublet-leads man valgte på hjemmesiden. Herefter bliver man flytter over til ConfirmCSV.cshtml som ses i figur \ref{fig: godkendCSV}. Her skal man bekræfte en sidste gang om man har valgt de rigtige leads.
+
+\begin{figure}[H]
+	\centering
+		\includegraphics[width=.50\textwidth]{godkendcsv.jpg}
+	\caption{Godkend stamdata af leads}
+	\label{fig: godkendCSV}
+\end{figure}
+
+Det gøres som et simpelt tjek for at man ikke uploader noget data som ikke giver mening. Hvis man skulle vælge et lead som man ikke vil have med pga. forkert data kan man vælge den fra her. Når det er gjort kan man upload sine data til databasen hvor der igen vil blive undersøgt om der er dubletter.  
+
+\begin{figure}[H]
+\lstset{language = CSharp}
+\begin{lstlisting}
+public ActionResult SubmitCSV(CSVList csv)
+{
+    List<CSVCompanyWrap> tempList = csv.Companies;            
+
+    foreach(var item in tempList.ToList())
+    {
+        if (item.Choosen)
+        {
+            csv.Companies.Remove(item);
+        }                
+    }
+    csv.Doubles = new LeadDetailsController(_db).LeadDetailsRepository.AddCompaniesFromCSV(csv);
+    return View("ChooseDbDoubles", csv);
+}
+
+\end{lstlisting} 
+\caption{Metode til at sortere valgte Leads i ContactListController.cs.}
+\label{fig: Confirm-submit}
+\end{figure}
+
+Her løber metoden i figur \ref{fig: Confirm-submit} listen igennem for at se om brugeren skulle have fravalgt nogen leads, hvorefter de vil blive fjernet af listen. Til sidst sendes listen til repositoriet hvor de vil blive føjet til databasen.
+
+\begin{figure}[H]
+\lstset{language = CSharp}
+\begin{lstlisting}
+public List<CSVCompanyWrap> AddCompaniesFromCSV(CSVList csv)
+{
+    List<CSVCompanyWrap> companyDoubles = new List<CSVCompanyWrap>();
+
+    foreach(var item in csv.Companies.ToList())
+    {
+        CSVCompanyWrap comp = new CSVCompanyWrap()
+        {
+             Company = _db.Companies.Where(x => x.Cvr.Equals(item.Company.Cvr)).SingleOrDefault(),
+                    Choosen = false
+        };
+                
+        if (comp.Company != null)
+        {
+            companyDoubles.Add(item);
+            companyDoubles.Add(comp);
+        }
+        else
+        {                               
+             _db.Companies.AddObject(item.Company);
+             _db.SaveChanges();
+        }
+    }
+
+    return companyDoubles;
+}
+\end{lstlisting}
+\caption{Metode til at sortere dubletter i database.}
+\label{fig: DB-dublets}
+\end{figure}
+
+Metoden i figur \ref{fig: DB-dublets} ligger i ContactRepository.cs. Derfor skrives og læses der direkte til databasen her. \_db er vores Entity Framework context.
+
+Inden de endeligt bliver tilføjet til databasen, undersøges listen om der også er dubletter i databasen. Det gøres ved at trække et Company objekt ud fra database via CVR nummeret i den sorteret CSV liste. CVR-nummeret bruges fordi det er unikt og derfor ikke indeholder nulls eller ens værdier. SingleOrDefault() returnere enten et objekt eller null. Det vil sige, hvis metoden finder et objekt vil if-sætning være true og så vil de to dubletter blive skrevet i en liste som bliver sendt tilbage til brugeren. Hvis den ikke finder nogen objekter vil leadet fra CSV dokumentet bliver skrevet i databasen med det samme.
+
+\begin{figure}[H]
+	\centering
+		\includegraphics[width=.50\textwidth]{csvDBdubletter.jpg}
+	\caption{Dubletter af sorteret CSV fil og Database}
+	\label{fig: csv-db-dubletter}
+\end{figure}
+
+De dubletter der bliver fundet i CSV dokumentet og databasen skal sorteres på samme måde som tidligere af brugeren. Hvorefter de bliver sendt ned til repositoriet og overskriver objektet i databasen. Se figur \ref{fig: csv-db-dubletter}
+ 
+\subsubsection{User Story - ListeView sortering}
+\textit{"`Som Sælger vil jeg kunne Sortere og filtrere data i listen over firmaer/leads så jeg kan få leads frem i den rækkefølge jeg ønsker"'}
+
+Et højt prioteret punkt på listen over user stories, var muligheden for at sortere leads på forskellige kriterier, så man f.eks. kunne finde alle leads der skulle kontaktes inden for et bestemt datointerval, et bestemt postnummer eller virksomhedstype. Det skulle også være muligt at filtrere på flere kriterier på en gang, så man f.eks. kunne vælge alle virksomheder inden for postnummer 8000-9000 med 20-100 medarbejdere. 
+ 
+ Ideen er, at inde på siden med leadsoversigten kan en bruger klikke på en kolonneoverskrift, herefter vises en boks ud for musemarkøren, hvor brugeren kan sætte filteret på denne kolonne op. Når brugeren uden for boksen, bliver filteret gemt og boksen skjules. Herefter kan brugeren enten sætte flere filtre op, eller klikke på "Filtrér" hvorefter filtrene sendes til serveren, der returnerer de leads der falder inden for filtrenes parametre.
+ 
+\textbf{Vise en Filterboks}\\
+Første skridt var, at vise samtlige leads. Dette var en forholdsvis simpel opgave der var hurtigt løst. Næste step var, at lave mulighed for at tilføje filtre. Det blev fastslået, at der grundlæggende var tale om 4 typer filtre: tal, datoer, tekst og multiple-choice valg. Datatypen for kolonneoverskriften blev specificeret i et array, hvor der var et element for hver kolonne:
+  
+ I figur \ref{fig: headerDefinition} ses hvordan kolonneoverskrifterne og deres tilsvarende datatyper bindes sammen. Bemærk l. 15-20, her hentes alle mulige employeeStatusser og alle employees ud af databasen. Resultatet af disse lægges i de to arrays defineret i linjerne 8 og 9 - det er kolonner hvor der skal vælges mellem flere fast definerede værdier.
+ 
+  \begin{figure}[H]
+
+\lstset{language = javascript}
+ \begin{lstlisting}
+filter = new Array();
+
+categories = new Array();
+categories["Navn"] = "tekst";
+categories["Adresse"] = "tekst";
+categories["By"] = "tekst";
+categories["Postnummer"] = "number";
+categories["Status"] = new Array();
+categories["ES-kontakt"] = new Array();
+categories["Sidste_Kontakt"] = "dato";
+categories["Kontakt_igen"] = "dato";
+categories["Web"] = "tekst";
+categories["Ansatte"] = "number";
+
+    var url = "getEmployeeStatus";
+    $.getJSON(url, function (data) {
+        categories["Status"] = data.states;
+        categories["ES-kontakt"] = data.employees;
+        
+    });
+ //$
+ \end{lstlisting}
+ \caption{Sammenbinding af overskrifter og typer}
+  \label{fig: headerDefinition}
+ \end{figure}
+ 
+ Der blev lavet fire divs, som blev lagt som det sidste i body-delen af siden, med css-attributten \verb|display: none;| der betyder, at de ikke vises. Disse divs indeholder form-elementer der er er baseret på de fire typer af data: dato, tekst, tal eller forudbestemte værdier som f.eks. status og ES-medarbejdere. 
+ 
+ Disse 4 formularer ligger i bokse og repræsenterer hver af de fire typer af filtre. Når brugeren klikker på en kolonneoverskrift bliver der lavet en kopi af den relevante boks, såfremt kassen ikke allerede eksisterer.
+ 
+ \begin{figure}[H]
+	\centering
+		\includegraphics[width=.50\textwidth]{filterBoks.jpg}
+	\caption{Eksempel på filterboks - her til et tekst-filter}
+	\label{fig:tekstFilterBoks}
+\end{figure}
+ 
+Koden i figur \ref{fig: clickHandler} håndterer klik på en kolonneoverskrift, og visning af den boks, hvor brugeren bestemmer parametrene for filteret for denne kolonne. Hvis der allerede er sat et filter for denne kolonne vises den gamle filterboks, og hvis det er første gang brugeren klikker på netop denne kolonneoverskrift, oprettes der en ny filterboks som herefter vises.
+ 
+ Der er i denne kodestump en del interessante punkter, det er værd at fremhæve. Først og fremmest i linje 3 og 4, hvor chosenCategory ender med at indeholde hvilken slags datatype der er tale om. Herefter bestemmes det i l. 8-26 hvilken formulartype der skal vises. Id'et på denne formular (som faktisk er en div) gemmes i variablen \verb|divToOpen|. I linje 26 skjules (ikke fjernes) evt. allerede viste filter-bokse. Efter, i linje 29 at have placeret filterboksen ved musemarkøren, bestemmes det om den valgte filterboks allerede eksisterer. 
+
+Er det ikke tilfældet skal den valgte filterboks klones. Den nye boks bliver ikke tilføjet dom-træet umiddelbart, men bliver lagt i variablen \verb|newElement|. Denne nye boks skal herefter have et id der dannes ud fra kolonneoverskriften og "\_filter", radio buttons skal have en name-attribut, så de opfører sig korrekt, og kun hører sammen i dén specifikke filterboks. Dette betyder, at radioknapper i f.eks. adresse-boksen ikke er kædet sammen med radioknapper i navne-boksen. I linje 36-41 bliver der for dato-felter initialiseret et jQuery plugin, så der vises en dato-vælger ved klik i disse bokse. Endelig appendes den nye boks til DOM-træet på linje 46 og på linje 48 vises den nye boks. 
+
+Grunden til, at det bliver undersøgt om filterboksen allerede eksisterer, er for at man kan få lov til at ændre et allerede eksisterende filter.
+
+Hvis den valgte boks allerede eksisterer i DOM-træet bliver det ganske enkelt lagt i newElement-variablen i l. 42. 
+
+Som det sidste lægges en overlay-div bag den nye filterboks, som, når der bliver klikket på den, vil skjule filterboksen. Denne overlay-div eksisterer udelukkende med det formål at registrere klik på et hvilket som helst sted på siden der ikke er filterboks.
+ 
+ \begin{figure}[H]
+
+ \lstset{language = javascript}
+ 
+ \begin{lstlisting}
+ /// Klik på en kolonneoverskrift
+$('#contactTable th').click(function (e) {
+    var chosenField = $(this).text().replace(" ", "_");
+    var chosenCategory = categories[chosenField];
+
+    var divToOpen;
+
+    if ($.isArray(chosenCategory)) {
+
+        divToOpen = "selectFilter";
+        $('#selectedVal').html('');
+        $.each(chosenCategory, function () {
+            var value = $(this)[0].value;
+            var text = $(this)[0].text;
+            $('#selectedVal').append('<option value="' + value + '">' + text + '</option>');
+        });
+    }
+    else if (chosenCategory == "dato") {
+        divToOpen = "dateFilter";
+    }
+    else if (chosenCategory == "number") {
+        divToOpen = "numberFilter";
+    }
+    else if (chosenCategory == "tekst") {
+        divToOpen = "textFilter";
+    }
+
+    $('.filterDiv').hide();
+    $("#" + divToOpen).css('top', e.pageY + 7).css('left', e.pageX + 7);
+    var suffix = "_Filter";
+
+    if ($('#' + chosenField + suffix).length == 0) {
+        newElement = $('#' + divToOpen).clone();
+        newElement.attr('id', chosenField + suffix);
+        newElement.children('input[type="radio"]').attr('name', chosenField + 'RadioBtn');
+        $(newElement).find('.datePickerField').datepicker({
+            showWeek: true,
+            firstDay: 1,
+            showOtherMonths: true,
+            selectOtherMonths: true
+        });
+        $('body').append(newElement);
+				//$('body').after(newElement);
+    }
+    else {
+        newElement = $('#' + chosenField + suffix);
+    }
+    $(newElement).fadeIn("fast");
+    $(newElement).after("<div class='darkClass'></div>");
+});
+
+
+\end{lstlisting}
+\caption{Komplet eventhandler for klik på kolonneoverskrift}
+ \label{fig: clickHandler}
+\end{figure}
+
+\textbf{Gemme filter}\\
+Når brugeren klikker udenfor filterboksen (dvs. på overlay-div'en) bliver filteret gemt. Det første der sker, er at overlay-div'en fjernes, herefter bliver div'en med filterboksen lagt i en variabel og gemt, så brugeren ikke kan se den længere. Det næste der sker, er at filterets kategori bliver bestemt ud fra id på filterboksen og ud fra denne kategori, filterets type (tekst, tal, dato eller multiple choice). Baseret på typen bliver filteret nu behandlet, så det kan gemmes i et array "filters", der består af en række filter-objekter. Til sidst bliver den relevante kolonneoverskrift markeret med en streg under teksten, så man kan se, at der er oprettet et filter for denne kategori.
+
+I figur \ref{fig: hideFilterDiv} ses hvordan overlay-div'en fjernes, filterdiven skjules og id'en hentes ud (l. 2-6). I linjerne 14-20 ses et eksempel på, at der gemmes en tekst-værdi. I filter-objektet gemmes egenskaberne values, criteria, type og category. Values indeholder værdien/erne. Ved datoer og tal er values altid et array, da der skal være mulighed for en øvre og nedre grænseværdi. Criteria indeholder kriteriet for filteret (større end, mindre end, må indeholde, må ikke indeholde osv). Type er ganske enkelt type af filteret og category indeholder kategorien.
+ \begin{figure}[H]
+
+ \lstset{language = javascript}
+ 
+ \begin{lstlisting}
+ $('body').delegate('.darkClass', 'click', function () {
+    $('.darkClass').remove();
+
+    var newlyHiddenElement = $('.filterDiv:visible');
+    newlyHiddenElement.hide();
+    var hiddenElementId = newlyHiddenElement.attr('id').split("_");
+
+    if (hiddenElementId.length == 3)
+        category = hiddenElementId[0] + "_" + hiddenElementId[1];
+    else
+        category = hiddenElementId[0];
+    var categoryType = categories[category];
+    switch (categoryType) {
+        case "tekst":
+
+            var criteria = parseInt($(newlyHiddenElement).children('input:radio:checked').val());
+            var value = new Array($(newlyHiddenElement).children('input[type="text"]').val());
+            if (value != "")
+                filter[category] = { values: value, criteria: criteria, type: "text", category: category };
+            break;
+            //$
+            ...
+                
+\end{lstlisting}
+\caption{Uddrag af eventhandler for oprettelse af filter}
+ \label{fig: hideFilterDiv}
+\end{figure}
+
+
+\textbf{Anvend filter}\\
+Når bugeren klikker på "Filtrér" blive der oprettet et asynkront kald, der indeholder filter-betingelserne (fig \ref{fig: sendFilter}, l. 2-9). Dette kald sendes til serveren, der filtrerer. Når klienten modtager resultatet fjernes først den gamle oversigt over leads (l. 11), hvorefter listen med resultater løbes igennem. I kodeeksemplet er det i linje 13, at løkken starter. Dato-felter bliver formatteret til et fornuftigt format (udeladt), herefter samles en ny række (l. 19-26 - dele udeladt). Som det sidste tilføjes den netop oprettede række til DOM-træet (l. 27)
+
+ Serverside-delen af filtreringen bliver nærmere forklare på s. \pageref{chap: decorator} under overskriften "Implementering".
+
+
+ \begin{figure}[H]
+
+ \lstset{language = javascript}
+ 
+ \begin{lstlisting}
+formattedFilter = JSON.stringify(newFilter);
+$.ajax({
+    url: "ApplyFilter",
+    data: formattedFilter,
+    type: "POST",
+    dataType: "json",
+    contentType: 'application/json; charset= utf-8',
+    processData: false,
+    success: function (data) {
+
+        $('#contactTable tr:nth-child(n+2)').remove();
+
+        for (var company in data.returnCompanies) {
+            var currentCompany = (data.returnCompanies[company]);
+            //console.log(currentCompany);
+       
+       			...
+
+            var newTr = "<tr>";
+            newTr += '<td><input id="check_' + currentCompany.Id + '" type="checkbox" value="' + currentCompany.Id + '"></td>';
+            newTr += '<td><p>' + currentCompany.Navn + '</p></td>';
+						
+						...
+						
+            newTr += '<td><p>' + currentCompany.Ansatte + '</p></td>';
+            newTr += "</tr>";
+            $('#contactTable tbody').append(newTr);
+        }
+    }
+});
+//$
+ \end{lstlisting}
+\caption{Uddrag af selve filtreringen, clientside}
+ \label{fig: sendFilter}
+\end{figure}
+
+Det er et bevidst valg, at filtrene ikke bliver anvendt i samme øjeblik filteret bliver oprettet. Dette skyldes, at der skal være tid til at oprette flere filtre af gangen, uden at skulle vente på, at resultatet af den forrige filtrering bliver loadet og vist.
+
+\subsection{Retrospective}
+Det første sprint gik utroligt godt, vi fik overraskende få problemer med at klargøre miljøet, hvor vi ellers havde regnet med der kunne opstå flere problemer. Vi fik set en af MVC's stærke sider, ved at man nemt kan vedligeholde det, og tilføje store ændringer til det. Samtidig fik vi også set hvor nemt det bliver at lave selv forholdsvis store ændringer i databasen når man bruger entity frameworket. Der blev selvfølgelig en del refactoring i vores gamle projekt, men på trods af de store ændringer var det hurtigt og nemt at få til at virke igen. Blandt andet skulle vi implementere repository pattern, udover at få adskilt vores database kald fra controllerne fik vi også bedre mulighed for at unit teste. Derudover var der en del ændringer i databasen omkring vores Customer og Company klasser, men da Enity frameworket laver vores modellag var det også forholdsvist nemt at skrive om. 
+
+Da vores support del af programmet lå i roden af vores MVC3 projekt skulle der også laves en anden mappe struktur her. Det viste sig at være nemt at gøre med MVCs Areas som betød vi mere eller mindre bare kunne flytte hele projektet ind i en ny mappe, og samtidig bevare al funktionalitet, og mens alle links inden for det Area stadig pegede det rigtige sted hen.
+
+Refactoring blev en nødvendighed da systemet skulle udvides, men også som en del af at forbedre og optimere den kode som allerede var skrevet. Da der bruges mange nye teknologier finder man ofte nye, smartere og mere rigtige måder at gør tingene på i forhold til de framework man bruger. 
+ 
+
+\section{Sprint 2}
+I sprint 2 var der mange små opgaver. Det var mange CRUD opgaver, hvor der blev brugt en hel del JavaScript på at få lavet en GUI uden for mange synkrone serverkald. Det er også derfor noget så simpelt som at vise nogle detaljer tager så "lang" tid som det gjorde her. Det meste af GUI'en kom på plads i dette sprint.
+
+\subsection{Sprint Backlog}
+Efter sprint 1 blev vores sprint "Capacity" bekræftet, derfor vi var mere rolige ved at sætte mange user stories i dette sprint og udlade den buffer vi havde sidst. Det er en masse små Stories som samtidig kræver at der blev lavet en del GUI. 
+\begin{figure}[H]
+	\centering
+		\includegraphics[width=1.00\textwidth]{Sprint2Backlog.jpg}
+	\caption{Sprint 2 backlog}
+	\label{fig:Sprint 2 backlog}
+\end{figure}
+
+\subsection{Burndown Chart}
+Vi kom lidt bagud til at starte med, det var hovedsageligt mass-update der tog lidt længere tid end forventet. Da mange af opgaverne mindede om hinanden, indhentede vi den tabte tid igen og nåede i mål til tiden.
+\begin{figure}[H]
+	\centering
+		\includegraphics[width=1.00\textwidth]{Sprint2Burndown.jpg}
+	\caption{Sprint 2 Burndown Chart}
+	\label{fig:Sprint 2 Burndown Chart}
+\end{figure}
+
+\subsection{Udførelse af sprint 2}
+\subsubsection{User story - Mass update}
+\textit{"`Som sælger vil jeg kunne Markere mange leads på én gang, og opdatere en variabel der gælder for dem alle"'}
+
+Første punkt, var at implementere en måde, så brugeren kunne vælge hvilke leads der skal opdateres. Dette var forholdsvist simpelt, da der ganske enkelt blev tilføjet en checkbox yderst til venstre, der havde companyId som value. Næste del var at lave en måde, hvor brugeren kunne fortælle hvilken kategori der skulle opdateres, og hvad den nye værdi skulle være. Der blev tilføjet et element i den øverste bar, hvor man kunne vælge kategori, denne select-liste blev lavet ud fra hvilke kategorier der fandtes i tabellen, som set i fig \ref{fig:tabelLoop}
+
+Denne funktion findes på listen over leads, og skal bruges til at opdatere data for mange leads på én gang. F.eks. hvis mange firmaer får ny kontaktperson ved ES.
+
+Første punkt, var at implementere en måde, så brugeren kunne vælge hvilke leads der skal opdateres. Dette var forholdsvist simpelt, da der ganske enkelt blev tilføjet en checkbox yderst til venstre, der havde companyId som value. Næste del var, at lave en måde, hvor brugeren kunne fortælle hvilken kategori der skulle opdateres, og hvad den nye værdi skulle være. Der blev tilføjet et element i den øverste bar, hvor man kunne vælge kategori, denne select-liste blev lavet ud fra hvilke kategorier der fandtes i tabellen, som set i fig \ref{fig:tabelLoop}
+\begin{figure}[H]
+\lstset{language = javascript}
+\begin{lstlisting}
+$.each($('#contactTable th:nth-child(n+2)'), function () {
+    $('#categoryToUpdate').append('<option value="' + i + '">' + $(this).text() + '</option>');
+    i++;
+});
+\end{lstlisting}
+\caption{Løkke der fylder selectboxen baseret på kolonner i tabellen}
+\label{fig:tabelLoop}
+\end{figure}
+\textbf{Valg af kategori}
+
+I figur \ref{fig:massUpdateEventhandler} ses eventhandleren der håndterer valg af kategori der skal opdateres. Når brugeren vælger kategorien, bliver typen bestemt på samme måde som ved oprettelse af et filter (l. 2-3) . Hvis der er tale om et array, bliver der lavet en selectbox med de foruddefinerede værdier (l. 5-14), og ellers bliver der oprettet et inputfelt. Hvis der er tale om et datofelt bliver dato-plugin'en også initialiseret (l. 15-23).
+\begin{figure}[H]
+\lstset{language = javascript}
+\begin{lstlisting}
+$('body').delegate('#categoryToUpdate option', 'click', function () {
+	var chosenField = $(this).text().replace(" ", "_");
+  var chosenCategory = categories[chosenField];
+
+  if ($.isArray(chosenCategory)) {
+  	$('#massUpdateInput').html('<select id="updateInput"></select>');
+    $.each(chosenCategory, function () {
+    	var value = $(this)[0].value;
+      var text = $(this)[0].text;
+
+      $('#updateInput').append('<option value="' + value + '">' + text + '</option>');
+
+		});
+	}
+  else if (chosenCategory == "dato") {
+	  $('#massUpdateInput').html('<input type="text" id="updateInput" class="datePickerField" />');
+	  $('#updateInput').datepicker({
+		  showWeek: true,
+		  firstDay: 1,
+		  showOtherMonths: true,
+		  selectOtherMonths: true
+	  });
+	}
+  else if (chosenCategory == "number") {
+      $('#massUpdateInput').html('<input type="text" id="updateInput" value="nummerfelt" />');
+  }
+  else if (chosenCategory == "tekst") {
+      $('#massUpdateInput').html('<input type="text" id="updateInput" value="tekst" />');
+  }
+});
+    
+	\end{lstlisting}
+  \caption{Eventhandleren for valg af kategori}
+  \label{fig:massUpdateEventhandler}
+\end{figure}
+
+\textbf{Gemme værdier}
+Når værdierne skal gemmes, skal siden finde ud af, hvilket firma-id der er sat hak ved i oversigten, og hvad den nye værdi er. At finde virksomhederne er forholdsvist simpelt, der laves en jQuery-løkke der løber igennem samtlige checkboxe inde i td-tags, der er checked. Herefter er det bare at tage value af disse checkboxes og tilføje dem til et array over companyId's.
+Når virksomhederne er kendte, skal den nye værdi trækkes ud. Disse værdier skal lægges i to variabler, newVal og newText. Hvis der er tale om tal, datoer eller tekst, er disse to identiske. Hvis der derimod er tale om data fra en selectbox, er der forskel på disse to. Variablen newVal er værdien (value) fra selectboxen, mens newText indeholder teksten. 
+
+Når værdierne er hentet ud, er der kun tilbage at sende forespørgslen til serveren, som vil opdatere værdierne, skrive de nye værdier i tabellen og afmarkere alle selectboxe.
+
+
+\subsubsection{ShowDetails}
+\textit{"`Som sælger vil jeg kunne klikke på et firma, så jeg får vist stamdata og kontakter"'}
+
+Denne userstory hænger tæt sammen med den næste - at se detajler for kontakter. Begge userstories realiseres på contactDetail-siden.
+
+Først skulle oversigten over virksomheder vises, denne oversigt blev lavet som et partial view, der blev vist. Controlleren for dette view tager en enkelt parameter, der afgører hvordan virksomhederne sorteres. Sorteringsrækkefølgen ændres ved klik i kolonneoversigten.
+
+\begin{figure}[H]
+\lstset{language = CSharp}
+\begin{lstlisting}
+public ActionResult _LeadsList(string SortOrder)
+{
+    List<CompanyList> companies = new List<CompanyList>();
+    companies = repo.GetCompaniesList(companies, SortOrder);
+
+    return PartialView("_LeadsList", companies);
+}
+\end{lstlisting}
+\caption{Controller for Oversigt over virksomheder}
+\label{fig:companyOverViewController}
+\end{figure}
+Herefter skulle klik på en virksomhed på listen håndteres. Det blev vurderet, at det bedste ville være, at hente virksomheden via et asynkront kald, der hentede så meget som muligt ind på én gang. Derfor hentes stamdata for virksomheden ind som partial view. Dette partial view returnerer en mændge html, som sættes ind på siden via jQuery. Samtidig foretages der et andet asynkront kald, der henter alle virksomhedens kontakter. Disse kontakter og deres tilhørende data gemmes i en variabal, da de bekvemt nok kommer tilbage, pakket pænt ind i et array. I figur \ref{fig:getContacts} ses hvordan listen samles på serveren og herefter returneres som et JSON-objekt.
+
+\begin{figure}[H]
+\lstset{language = CSharp}
+\begin{lstlisting}
+public ActionResult getContacts(int companyId)
+{
+	var contacts = repo.GetContactsByCompany(companyId);
+	string navn = repo.GetCompany(companyId).Name;
+	var contactList = (
+		from c in contacts
+		select new
+		{
+		   firstName = c.Firstname,
+		   lastName = c.Lastname,
+		   contactId = c.Contactsid,
+		   phone = c.Phone,
+		   cell = c.Mobilephone,
+		   actions = (from b in c.Actions
+		              orderby b.Date descending
+		              where b.Date < DateTime.Now
+		              select new
+		              {
+		                  actionId = b.Actionsid,
+		                  date = b.Date,
+		                  desc = b.Description,
+		                  type = b.Actiontype.Actiontypesid,
+		                  employees = (from d in b.Employees
+		                               select 
+		                                   d.Firstname + " "+ d.Lastname)
+		                }),
+		   email = c.Email,
+	...
+	return Json(new { contactList, navn, notes }, JsonRequestBehavior.AllowGet);
+}
+
+\end{lstlisting}
+\caption{Listen over kontakter sættes sammen.}
+\label{fig:getContacts}
+\end{figure}Ud fra dette objekt laves oversigten over kontakter i højre side. Ved at hente al information ud på én gang spares tid når brugeren klikker på en kontakt. Vi vurderede, at den ekstra tid for det ekstra kald, ikke ville betyder noget, i forhold til ventetiden ved at lave et ekstra seperat kald ved klik på oversigten. Hvis det senere viser sig, at det er meget store mændger data der skal hentes, som vil forårsage en væsentlig ventetid, kan det let lade sig gøre, at data om en enkelt kontakt først hentes ud ved klik på den specifikke kontakt.
+\subsubsection{ShowContactDetails}
+\textit{"`Som sælger vil jeg kunne vælge en kontakt, så jeg kan se alle oplysninger jeg har gemt om kontakten"'}
+
+Når en bruger klikker på en kontakt i oversigten, udledes kontaktens id af id'et på den div, der blev klikket på, hvorefter der sætte to cookies, én med contactId'et, og en med nummeret på den kontakt-div der blev klikket på:
+
+\begin{figure}[H]
+\lstset{language = javascript}
+\begin{lstlisting}
+
+$('body').delegate('.contactDiv', 'click', function ()
+{
+
+	clickedElement = $(this).attr('id').split("_")[1];
+	var clickedContact = contactList[clickedElement];
+	setCookie("actualContactId", clickedContact.contactId);
+	setCookie("contactId", clickedElement);
+		\end{lstlisting}
+  \caption{Hentning af data om den valgte kontakt.}
+  \label{fig:clickedContactHandlerFirst}
+\end{figure}
+
+Herefter fyldes data i de felter hvor de hører til. Siden er i forvejen opbygget med en række div's der har et span-element som child. Dette span-element indeholder de forskellige data og bruges også til at redigere data. Da variablen clickedContact indeholder alle oplysninger om kontakten er det en forholdsvist simpel ting at udfylde felterne.
+	\begin{figure}[H]
+\lstset{language = javascript}
+\begin{lstlisting}
+	var esContact = clickedContact.ESContact;
+	$('#chosenContact').val(clickedContact.contactId);
+	$('#navn_contact_div').children('span').text(clickedContact.firstName + " " + clickedContact.lastName);
+	$('#mail_contact_div').children('span').text(clickedContact.email);
+	$('#telefon_contact_div').children('span').text(clickedContact.phone);
+	$('#cell_contact_div').children('span').text(clickedContact.cell);
+	$('#medarb_contact_div').children('span').text(esContact.firstName + " " + esContact.lastName);
+\end{lstlisting}
+\caption{Visning af basal data for kontakt}
+\label{fig:contactDetailsShowingBasicData}
+\end{figure}
+
+Det næste der sker, er at actions skal vises. Igen ligger alle actions allerede i  clickedContact-objektet. Af hensyn til overblikket skal der højst vises de tre sidste actions, længere nede på siden findes en komplet oversigt over alle actions på den aktuelle kontakt. Igen er der allerede en div med et span-element som child, der er klar til at holde informationen:
+\begin{figure}[H]
+\lstset{language = javascript}
+\begin{lstlisting}
+var prevActions = ""
+
+maxActions = (clickedContact.actions.length > 3) ? 3 : clickedContact.actions.length;
+
+for (var actionNo = 0; actionNo < maxActions; actionNo++)
+{
+	var action = clickedContact.actions[actionNo];
+	var newDate = parseInt(action.date.replace(/[^\d.]/g, ""));
+
+	prevActions += " (" + getDateYear(newDate) + ") " + action.desc + "<br />";
+}
+
+$('#lastContact_contact_div').children('span').html('');
+$('#lastContact_contact_div').children('span').html(prevActions);
+	\end{lstlisting}
+	\caption{Tilføjelse af actions i oversigten}
+	\label{fig:contactDetailsShowActions}
+\end{figure}
+	
+	
+	\begin{figure}[H]
+\lstset{language = javascript}
+\begin{lstlisting}
+$('.companyNote').remove();
+
+//Viser notes for kontakten
+for (var noteId in clickedContact.notes)
+{
+	var note = clickedContact.notes[noteId];
+
+	var entryDate = eval("new " + (note.date).replace(/\//gi, ""));
+	note.dato = (dateFormat(entryDate)).replace(/\//gi, "-");
+
+	$('#contactNotes').after("<div class='companyAction'><div class='companyNote' id='compNote_" + note.notesId + "'><span  class='companyNoteHeader'>" + note.employee + " - " + note.dato + "</span><div class='noteContent'>" + note.content + "</div></div></div>");
+}
+	\end{lstlisting}
+	\caption{Visning af notes for den valgte kontakt}
+	\label{fig:contactDetailsShowNotes}
+\end{figure}
+Som det sidste skal der vises opkald og møder med kontakten, hvilket også er forholdsvist simpelt.
+		\begin{figure}[H]
+\lstset{language = javascript}
+\begin{lstlisting}
+	//Viser opkald for kontakten
+	for (var actionId in clickedContact.actions)
+	{
+		var action = clickedContact.actions[actionId];
+		var entryDate = eval("new " + (action.date).replace(/\//gi, ""));
+		action.dato = (dateFormat(entryDate)).replace(/\//gi, "-");
+		var element = "";
+		if (action.type == 1)
+			element = "opkald";
+		if (action.type == 2)
+			element = "meetings";
+
+		if (element != "")
+			$('#' + element).after("<div class='companyAction'><div class='companyNote' id='compNote_" + action.actionId + "'><span  class='companyNoteHeader'>" + action.dato + "</span><div class='noteContent'>" + action.desc + "</div></div></div>");
+
+	}
+});
+
+//$
+	\end{lstlisting}
+  \caption{Eventhandleren for valg af kategori}
+  \label{fig:clickedContactHandler}
+\end{figure}
+
+I disse to user stories blev der lagt en del tanker bag opbygningen af den del, hvor stamdata som telefonnummer, adresse, navn osv. blev vist - både for firma og kontakt. Grunden var, at det skulle være nemt at ændre oplysninger. Product owner ønskede, at det skulle være så simpelt så muligt. Det blev vurderet, at det nemmeste ville være en løsning, hvor brugeren klikkede på en information som f.eks. telefonnummeret, hvorefter teksten ændredes til et tekst-felt. Efter man har ændret oplysningen og klikker udenfor tekstfeltet, ændres det tilbage til tekst og databasen opdateres.
+
+Dette resulterede i en opbygning, hvor hver information havde følgende html:
+\begin{figure}[H]
+\lstset{language = html}
+\begin{lstlisting}
+<div id="city_firm_div" class="infoDiv">
+	<span>@Model.City.Cityname</span></div>
+</div>  
+\end{lstlisting}
+\caption{Eksempel på datavisning.}
+\label{fig:showDataDetail}
+\end{figure}
+Med denne opbygning var det nemt at lave en jQuery eventhandler der reagerede på klik i span i divs med klassen "infoDiv". Teksten i span'en kunne også nemt udskiftes med en infoboks. Denne infoboks har så en eventhandler på, der reagerede når tekstboksen mistede fokus. Via $delegate$-funktionen var det ikke nødvendigt at lægge eventhandleren på hver gang.
+
+Desuden var det også simpelt, for information omkring den enkelte kontakt, at udfylde felterne, da det var span'en i den relevante div der skulle udfyldes via jquery's $.html()$-funktion. Denne funktion giver mulighed for at indsætte html i et bestemt element.
+\subsection{Retrospective}
+Det var et forholdsvis nemt sprint uden de helt store udfordringer, men også et vigtigt sprint da der kom en masse GUI på plads. Det var rart at have noget rigtigt at vise vores product owner. 
+
+Vi snakkede også om at vi skal passe på med ikke at kæle for meget ved de helt små detaljer. Derudover skal vi holde os til de user stories/tasks der er skrevet ned og ikke begynde at lave ny funktionalitet, også kaldet "Feature Creep". På trods af det var det et godt sprint der endnu gang endte til tiden, men igen også et sprint uden de store udfordringer. 
+
+\section{Sprint 3}
+I sprint 3 tog vi hul på Note delen af vores system, samt det at kunne oprette en hændelse, hvor den sidst nævnte nok er det mest interessante i dette sprint. Notes delen var en nogenlunde simpel CRUD operation, mens hændelse var noget mere vanskelig da der skulle synkroniseres med Googles kalender. 
+
+Derudover skulle der også laves så man kunne se sin kalender samt oprettelse af Kontakter.
+
+\subsection{Sprint Backlog}
+Der var forholdsvis mange stories i dette sprint, hvor "Opret hændelse" var den klart mest komplekse som kunne skabe lidt problemer hvis vi var uheldige. Der var også en del research involveret med den da vi skulle synkronisere den med Googles Calendar.
+
+\begin{figure}[H]
+	\centering
+		\includegraphics[width=1.00\textwidth]{Sprint3Backlog.jpg}
+	\caption{Sprint 3 backlog}
+	\label{fig:Sprint 3 backlog}
+\end{figure}
+
+\subsection{Burndown Chart}
+Som det kan ses på burndown chartet gik det helt galt i dette sprint. Ikke så meget fordi vores estimater ikke holdte, men fordi firmaet vi skrev opgave hos gik konkurs. Det fik selvfølgelig den betydning at vores udviklingsmiljø blev lagt ned og gjorde det umuligt at fortsætte, da vi brugte deres servere. De ville heldigvis gerne hjælpe os færdige med projektet så serveren blev sat op igen på en ny adresse hvor vi så kunne udvikle videre hjemmefra. Det betød dog der var et par dage mens serverne blev flyttet som også kan ses efter dag 1. Da serverne kommer igen fortsætter vi arbejdet og når næsten igennem sprintet på trods af det store slag det var at firmaet gik ned. Da det var en private bredbånds linje serverne blev stillet op på, betød det desværre at forbindelsen var en smule ustabil hvilket kan ses på dag 6.
+
+Det var primært "Opret hændelse" vi ikke nåede at blive færdig med.
+
+\begin{figure}[H]
+	\centering
+		\includegraphics[width=1.00\textwidth]{Sprint3Burndown.jpg}
+	\caption{Sprint 3 Burndown Chart}
+	\label{fig:Sprint 3 Burndown Chart}
+\end{figure}
+
+\subsection{Udførelse af sprint 3}
+Hvis man ser bort fra problemerne omkring serverne, gik sprintet sådan set udmærket, hvor vi nåede de fleste af vores user stories. Visning og oprettelse af Notes blev lavet som de første, sammen med oprettelse af Kontakt. 
+
+View Calendar havde vi lavet en proof of concept på, så den burde være nem at implementere ordenligt i systemet. Derudover manglede opret hændelse at blive lavet færdig, det lykkedes os dog at lave en stor del af den.
+
+\subsubsection{User Story - Opret Hændelse}
+\textit{"Som sælger vil jeg oprette en action så jeg kan huske det når den også blive skrevet til min google-kalender"}
+
+Det vores product-owner egentlig ønskede var tæt på en kopi af Googles egen måde at gøre det på. Det betød at udover de mest basale features som overskrift, beskrivelse, til og fra tidspunkter, skulle der også laves gentagelser. Det vil sige der skulle være mulighed for at gentage en hændelse X antal gange hver tirsdag, for eksempel. 
+
+Det valgte vi at løse ved at lave en tabel til kun at styre gentagelser, samt en til at styre datoerne.
+
+\begin{figure}[H]
+	\centering
+		\includegraphics[width=1.00\textwidth]{actiondb.jpg}
+	\caption{Udsnit af databasediagram.}
+	\label{fig: Actiondb}
+\end{figure}
+
+Som det kan ses på figur \ref {fig: Actiondb} er der også en date på Action. Dette er noget vi selvfølgelig vil refactor om, så vi ikke har det samme data to steder. Men grundet vores tidsmæssige problemer i dette sprint, nåede vi det aldrig, men vi er dog opmærksomme på dette. 
+
+Da oprettelse af en hændelse er en del af et større View med mange Models bruger man et PartialView. Det vil sige man kan sætte et View ind i et View og på den måde dele sine UI op i de forskellige sektioner man nu har på en side. Man kan også sende en anden Model til sit partialView, det gør det utrolig nemt og smart at bygge sine sider op på den måde.
+
+\begin{figure}[H]
+\lstset{language = CSharp}
+\begin{lstlisting}
+<div id="detaljer" class="mainWindow">
+   ...
+        <fieldset>
+            <legend>Hændelser</legend>        
+            
+            @using (Html.BeginForm())
+            {                
+                @Html.Action("Action")            
+            }
+        </fieldset>
+...
+</div>
+\end{lstlisting} 
+\caption{Importerer et PartialView.}
+\label{fig: PartialView}
+\end{figure}
+
+På figur \ref{fig: PartialView} ses det View der kalder det partialView som indeholder den kode der skal til for at vise vores Hændelses sektion. Der kan blandt andet bruges en "helper" kaldet Action. Som parameter tager den her navnet på den metode som skal kaldes i controlleren. At helperen og metoden der bliver kaldt, begge hedder Action er tilfældigt.
+
+\begin{figure}[H]
+\lstset{language = CSharp}
+\begin{lstlisting}
+[ChildActionOnly]
+public ActionResult Action()
+{
+    ActionViewModel avm = new ActionViewModel();
+    avm.ActionType = repo.GetActionTypes();
+
+    return PartialView("ActionViewModel", avm);
+}
+\end{lstlisting} 
+\caption{ChildActionOnly Metode}
+\label{fig: ChildActionOnly}
+\end{figure}
+
+På figur \ref{fig: ChildActionOnly} ses den metode som blev kaldt fra vores View i figur \ref{fig: PartialView}. Attributten [ChildActionOnly] gør at der kun kan kaldes fra et View. Selve metoden henter en liste af ActionTyper som bliver lagt i vores partialviews model. Listen bruges til at fylde en dropdownbox med data. Til sidst returnerer vi et PartialView(), som her tager to parameter. Den første er navnet på det view vi vil tegne, mens den anden er det objekt vi vil sende med som Model.
+
+I stedet for et postback, laves der et AJAX kald som sender et JSON objekt med til controllerens post-metode. Så længe JSON objektet er bygget op på samme måde som det objekt post-metoden tager som parameter finder MVC selv ud af at lave JSON objektet om til et C\# objekt.
+\begin{figure}[H]
+\lstset{language = CSharp}
+\begin{lstlisting}
+[HttpPost]
+public JsonResult AddAction(ActionViewModel jsonAction)
+{ 
+    ActionViewModel avm = jsonAction;
+
+    CRMSystemModel.Action calendarEvent = new CRMSystemModel.Action()
+    {
+         Title = avm.Title,
+         Description = avm.Description,
+         Location = avm.Location,
+         Actiondays = avm.Actionday,
+         Actiontype = avm.ActionType[0],
+         Calendarid = "en streng",
+         Status = "Igang"
+     };
+
+     repo.CreateAction(calendarEvent);
+
+     return Json(new { status="ok" }, JsonRequestBehavior.AllowGet);
+}
+\end{lstlisting} 
+\caption{Hændelse post-metode}
+\label{fig: actionPostMethod}
+\end{figure}
+Som det ses på figur \ref{fig: actionPostMethod} kommer JSON objektet ind som parameter og bliver selv "`binded"' om til et ActionViewModel objekt. Det objekt indeholder al den information vi skal bruge til at lave vores Hændelse. Der oprettes en Action med de forskellige properties hvorefter det bliver sendt til Data Access-laget og gemt i databasen. 
+
+Her ville vi selvfølgelig gerne have haft sendt informationen videre til vores Google Calendar, så vi kunne oprette en hændelse i brugeres kalender.
+
+Metoden her er selvfølgelig ikke helt færdig, da der vil komme nogle tjek på om man har valgt hændelsen til at være hele dagen, eller der skal være gentagelser. Det, at kunne invitere andre til et møde, fik vi heller aldrig implementeret. Det nåede vi desværre ikke som forklaret tidligere i afnisttet.
+
+\subsection{Retrospective}
+På trods af omstændighederne var det egentlig et udmærket sprint. Vi nåede de fleste af vores story points, og der var ikke rigtigt noget at stille op overfor det der skete. Desværre fik vi aldrig rigtigt taget hul på det der kunne have været rigtig spændende at få lavet noget mere på, nemlig Googles API. Vi ville også gerne have haft mere tid til at lave nogle flere tests i det her sprint. 
+
+\section{Sprint 4}
+Sprint 4 blev vi nødt til at springe helt over, da vi simpelthen blev sat for langt bagud i sprint 3 og da vores deadline nærmede sig prioriterede vi rapporten højest. Det var et sprint hvor vi ville være blevet færdig med vores sidste user stories med 100 i vigtighed(Importance). Det ville primært være på "Min Side" der skulle laves features til at styre dagens opgaver. Derudover skulle der også kunne sendes mails fra "Leads Detajler" siden. Derudover skulle den også synkroniseres med de mails der allerede var blevet sendt via Googles interface. Så her skulle der igen gøres brug af Googles API.
+
+\subsection{Sprint Backlog}
+Det er vores sidste planlagte sprint, og derfor begynder de user stories med mindre vigtighed at dukke op. Det er de sidste af vores vigtigste user stories der er med her.
+
+\begin{figure}[H]
+	\centering
+		\includegraphics[width=1.00\textwidth]{Sprint4Backlog.jpg}
+	\caption{Sprint 4 backlog}
+	\label{fig:Sprint 4 backlog}
+\end{figure}
+
+\subsection{Burndown Chart}
+Burndown chartet er blevet undladt da der slet ikke startet op på dette sprint.
+
+\subsection{Udførelse af sprint 4}
+I praktik perioden blev der lavet en metode til at sende automatisk e-mail til kunder der havde kontaktet kundeservice, så implementeringen af selve afsendelsen af e-mail vil være en overskuelig opgave. Dertil kommer den synkronisering af e-mails som er blevet sendt til en kunde via Googles UI, før de er blevet oprettet i systemet som kunder. Selvfølgelig også efter hvis man skulle sende flere mails fra Google.
+
+Udover sending af e-mails er UI lavet til TodayTask user stories, dog med noget dummy data, blot for at vise produkt owneren hvordan det ville komme til at se ud.

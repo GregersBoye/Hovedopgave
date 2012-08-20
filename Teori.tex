@@ -1,0 +1,210 @@
+
+\chapter{Teori}
+\section{Patterns}
+
+Som nævnt i forordet på s. \pageref{quote}, kan patterns beskrives som generelle løsninger, der har vist sig at virke på mange problemer. Patterns er altså en form for "altmuligværktøjer" som en programmør kan benytte sig af. 
+
+\subsection{Formål}
+Formålet, eller ideen med patterns er, at det er løsninger, der kan bruges i mange tilfælde. På denne måde undgår programmører at skulle opfinde den dybe tallerken igen og igen. Samtidig er patterns den bevist bedste måde at løse problemerne på, så man undgår fejl, såfremt patterns'ne implementeres korrekt. 
+
+I det følgende vil vi forevise en række patterns, som vi har brugt i arbejdet med CRM-systemet. Vi vil gennemgå hvilke former for problemer de løser, hvordan de implementeres, og hvordan og hvorfor vi har benyttet os af dem. Vi har dog valgt at se bort fra helt simple patterns som f.eks. singleton.
+
+\subsection{Forskellige patterns}
+\subsubsection{Repository}
+Repository pattern er en måde at adskille kommunikationen mellem databasen og resten af programmet. Det er her vi skriver og læser til og fra databasen. Det skal sammenlignes med et data-accesslag. Når der i dette afsnit tales om repository er det i forhold til Repository pattern, som ikke må forveksles med database repositories.
+
+Ved at implementere repository pattern undgås blandt andet en masse kodeduplikation idet vi kalder ned til vores repository hver gang og genbruger på den måde de forskellige metoder. 
+
+Udover mere abstraktion i designet, giver det også mulighed for bedre at kunne unit teste systemet. Det hjælper med at isolere de metoder der skal testes, ved at gøre det langt nemmere at forfalske (Mock) vores data. 
+
+\subsubsection{Implementering af Repository}
+Måden repository'et er implementeret på, er med henblik på at kunne unit teste med et testing framework kaldet Moq \citep{Moq}, dette også giver samtidig den ønskede abstraktion. For at hjælpe med at danne et overblik over vores implementering har vi lavet følgende diagram. 
+\begin{figure}[H]
+	\centering
+		\includegraphics[width=0.75\textwidth]{repositorymodel}
+	\caption{Respositorymodel}
+	\label{fig:Respository}
+\end{figure} 
+Som det ses her, har vi vores forrentningslogik først. Her bestemmes hvilken datakilde der skal bruges. Dette vil afhænge af, om vi kommer fra f.eks. en unit test med Mocked data, eller hvis det er en Integrations test som vil bruge de virkelige data til at teste på, eller hvis vi selvfølgelig bare bruger programmet normalt. Dernæst har vi vores interface, som føre os videre ned i vores repository som så henter den ønskede data fra den ønskede datakilde.
+
+Vi startede med at lave et repository lag i vores projekt. Her opretter vi alle vores repository klasser samt deres interface klasser. Se evt. afsnittet om arkitekturen. Næsten alle vores MVC controllere har hvert sit repository da controllerne næsten altid dækker et bestemt område i database. Hvis dette ikke er tilfældet genbruger man selvfølgelig det repository som har de nødvendige metoder. På den måde kan vi også genbruge mange af vores metoder i vores repositories. 
+
+Vores repository implementere selvfølgelig det interface der hører sig til. Derudover har vi en constructor hvor vi sætter hvilken datakilde den skal bruge. Da vi bruger Moq kan vi mock dette så den eksempelvis opfatter en simpel tabel som datakilde. Dybere forklaring omkring dette kommer senere i afsnittet.
+
+\begin{figure}[H]
+\lstset{language = CSharp}
+\begin{lstlisting}
+public class ContactRepository : IContactRepository
+{
+    private CRMSystemEntities _db;
+    public ContactRepository(CRMSystemEntities repository)
+    {
+        _db = repository;
+    }
+}
+\end{lstlisting}
+\caption{Repository Constructor.}
+\label{fig: rep_Constructor}
+\end{figure}
+
+I selve respositoriet vil der selvfølgelig være en implementering af hver enkel metode angivet i interfacet, disse er undladt her, da de ikke er relevante.
+
+Da det er vores controllere der står for at styre hvilken datakilde der skal gøres brug af, har vi oprettet en række contructors til netop at styre dette.
+
+\begin{figure}[H]
+\lstset{language = CSharp}
+\begin{lstlisting}
+public class LeadDetailsController : Controller
+    {
+        private IContactRepository _repo;
+
+        public LeadDetailsController()
+        {
+            this._repo = new ContactRepository(new CRMSystemEntities());
+        }
+        
+        public LeadDetailsController(IContactRepository repo)
+        {
+            this._repo = repo;
+        }
+        
+        public LeadDetailsController(CRMSystemEntities db)
+        {
+            this._repo = new ContactRepository(db);
+        }
+
+        public IContactRepository LeadDetailsRepository
+        {
+            get { return _repo; }
+        }
+   }
+\end{lstlisting}
+\caption{Controller Constructor.}
+\label{fig: con_Constructor}
+\end{figure}
+
+Den første constructor bruges når der eksempelvis skal hentes eller sendes data fra et View som samme controller styrer. Den bruger vores entity framework som standard.
+Efter den har vi den constructor vi bruger, når vi mocker vores datakilde til Unit Tests. Som det kan ses tager den et interface som parameter. Det er det object vi mocker i vores unit test.
+
+Den sidste bruges hvis dette repository skal bruges fra en anden controller. I Entity frameworket er objekter bundet til en bestemt context, så for at kunne sende objekterne igennem controlleren skal vi have den context med som de er bundet til. Det er det vi gør med denne constructor. Derudover har vi en simpel property for at kunne få fat i repositoriet fra andre controllere.
+\subsubsection{Unit Test med repository}
+(Denne unit test hører til en anden MVC controller og repository end de forgående eksempler)
+Her vil vi kort beskrive en test metode, for at vise hvordan vi benytter repository pattern i forbindelse med unit testing.
+
+\begin{figure}[H]
+\lstset{language = CSharp}
+\begin{lstlisting}
+[TestMethod()]       
+public void BugDetailsTest()
+{             
+    Ticket[] ticketss = new Ticket[] {
+        new Ticket() {Ticketsid = 1, Headline = "test1", Content = "bla",... },
+        new Ticket() {Ticketsid = 2, Headline = "test2", Content = "blabla",... },
+        new Ticket() {Ticketsid = 3, Headline = "test3", Content = "blablabla",... }
+    };
+    int id = 2;            
+    Mock<ITicketRepository> mock = new Mock<ITicketRepository>();
+    mock.Setup(m => m.GetDetails(id)).Returns(ticketss[id - 1]);
+            
+    TicketController target = new TicketController(mock.Object);
+    var result2 = target.BugDetails(id) as ViewResult;
+    Ticket ticket = (Ticket)result2.ViewData.Model;
+
+    Assert.AreEqual("blabla", ticket.Content);
+}
+\end{lstlisting}
+\caption{Unit Test.}
+\label{fig: UnitTest}
+\end{figure}
+
+Testen er en standard unit test der følger den typiske "arrange, act, assert". Der startes med at lave et array af Tickets som her vil blive datakilden. Dernæst lavers et mock af ITicketRepository. Derudover laves en instans af TicketController hvor der bruges den contructor der tager imod et ITicketRepository objekt som parameter. På den måde ved testen, at vi vil benytte vores array af Tickets som datakilde. Til sidst tjekkes det om det er den forventede data der returneres. 
+
+\subsubsection{Decorator}
+
+I og med, at der skulle laves et dynamisk filter, hvor det på forhånd ikke var vidst hvilke parametre der skulle filtreres på, var det nødvendigt at finde en løsning der gav en vis grad af fleksibilitet.
+
+Problemet med at bruge Entity framework og LINQ er, at det ikke er muligt at lave dynamiske queries på samme måde som i sql. Dette er nødvendigt i forbindelse med filter-funktionen, da det på forhånd ikke kan siges, hvilke kategorier der skal sorteres på, og hvordan. I SQL kan man f.eks. tilføje en streng til sin query, som er baseret på andre variabler:
+
+\verb|string completeQuery = query +" AND WHERE userId > 23 " + sortPart;|
+
+Det er ikke muligt på samme måde at tilføje eksempelvis betingelser i LINQ-kald.
+
+ Normalt bruges Decorator pattern til at tilføje funktionalitet til en klasse. Et decorator pattern fungerer ved, at man har en ConcreteComponent, som decoratorklassen arver fra. Decoratorklassen er den klasse som skal dekoreres. Den initialiseere, hvorefter man giver den videre til en anden klasse som parameter. Denne nye klasse tilføjer så funktionalitet, og den nye klasse bliver så igen givet videre til en anden klasse osv. Denne senden klasser videre, bliver gjort mulig via et factory pattern. Et decorator pattern vil især typisk blive brugt ved grafik, hvor man f.eks. kan tilføje funktionalitet som scrollable, resizable osv til et vindue, hvor vinduet et grundklassen.
+
+\begin{figure}[H]
+	\centering
+		\includegraphics[width=0.55\textwidth]{Decorator}
+	\caption{Decorator Model}
+	\label{fig:Decorator}
+\end{figure} 
+
+På modellen kan ses "grundklassen" (concreteComponent) og dekoratøren, som er den klasse der skal dekoreres. Øverst ses interfacet Component, som er det interface decorator'en arver fra. 
+
+\textbf{Implementering}
+
+
+\label{chap: decorator}
+Måden vi implementerede decorator-pattern'et på, var ved at først lave en generel abstrakt klasse "ConcreteQuery". Denne klasse indeholder ganske simpelt en liste over companies samt en metode "DoQuery()". Herudover, er der også en constructor, der tager generelle parametre, og lægger dem i de relevante properties. Desuden lavede vi en klasse for hver kolonne i oversigten, som så kan kaldes og filtrere resultaterne.
+
+Hver klasse har en constructor der tager imod det FilterItem der hører til dem, og samtidig tager imod Company-listen som den ser ud pt. Herefter bliver filteret påført listen, og listen returneres.
+  \\
+\begin{table}[H]
+\centering
+\begin{tabular}{|ll|}
+
+  \hline
+		\multicolumn{2}{|c|}{FilterItem} \\
+		\hline
+		Values & List$<$string$>$\\
+		Criteria & List$<$int$>$\\
+		CompanyList& List$<$Company$>$\\
+		Type& string\\
+		Category &string		\\
+		\hline
+		
+		\end{tabular}
+	\caption{Attributter for FilterItem-klassen}
+	\label{fig:FilterItemModel}
+\end{table}
+
+
+\begin{figure}[H]
+	\caption{city-query klassen, læg mærke til der arves fra concretreQuery og, at den constructor kaldes}
+	\label{fig: cityQuery}
+	\lstset{language = CSharp}
+	\begin{lstlisting}
+public class CityQuery : ConcreteQuery
+{
+    public CityQuery(List<CompanyViewModel> companyList, List<string> values, int criteria)
+        : base(companyList, values, criteria)
+    {
+        companyList = (from c in companyList
+                       where c.Company.City != null
+                       select c).ToList();
+    }
+
+    public override List<CompanyViewModel> DoQuery()
+    {
+        List<CompanyViewModel> returnList = new List<CompanyViewModel>();
+        string value = values[0];
+        if (this.criteria == 1)
+            returnList = (from c in companyList
+                          where c.Company.City.Cityname.ToLower().Contains(value.ToLower())
+                          select c).ToList();
+        else
+            returnList = (from c in companyList
+                          where !c.Company.City.Cityname.ToLower().Contains(value.ToLower())
+                          select c).ToList();
+
+        return returnList;
+    }
+}	
+\end{lstlisting}
+\end{figure}
+
+Som det ses af kodeeksemplet i figur \ref{fig: cityQuery}, kan man se, at vi har en fælles constructor der bliver arvet fra ConcreteConstructor, denne constructor bliver kaldt og modtager kriterie og værdi fra det respektive FilterItem-objekt. Disse gemmes under de relevante egenskaber. Herefter tager query-klassen over, og behandler data hvis det er nødvendigt, f.eks. hvis der er tale om tal-data, bliver de konverteret fra en string til integer. 
+
+Det er forholdsvist simpelt når vi benytter filteret. Filtercontrolleren får tilsendt en liste med filterItems. Som det ses på figur \ref{fig:FilterItemModel} er FilterItem ikke andet end en beholder der holder værdier der er relevate for et enkelt filter.
+
+Herefter løbes listen af filtre igennem, og den dertilhørende query hæftes på concreteQuery-klassen via klassen QueryFactory. Resultatet heraf returneres til controlleren, controlleren serialiserer herefter listen til JSON og sender den tilbage til klienten.
+

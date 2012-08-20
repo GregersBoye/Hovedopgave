@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="no"?>
+<txcop:outputProfiles version="1" xmlns:txcop="http://schemas.ToolsCenter.org/TeXnicCenter/OutputProfiles.xsd">
+	<outputProfileList>
+		<outputProfile name="LaTeX =&gt; DVI" stopOnLatexError="false">
+			<texCommand execute="true" path="latex.exe" arguments="--src -interaction=nonstopmode &quot;%Wm&quot;"/>
+			<bibTexCommand execute="true" path="bibtex.exe" arguments="&quot;%bm&quot;"/>
+			<makeIndexCommand execute="true" path="makeindex.exe" arguments="&quot;%bm&quot;"/>
+			<postProcessors/>
+			<viewer path="YAP.EXE" closeBeforeCompilation="false">
+				<viewProjectCommand type="commandLine">
+					<commandLineCommand path="YAP.EXE" arguments="-1 &quot;%bm.dvi&quot;"/>
+					<ddeCommand path="" server="" topic="System" command=""/>
+				</viewProjectCommand>
+				<viewCurrentFileCommand type="commandLine">
+					<commandLineCommand path="YAP.EXE" arguments="-1 -s %l&quot;%Wc&quot; &quot;%bm.dvi&quot;"/>
+					<ddeCommand path="" server="" topic="System" command=""/>
+				</viewCurrentFileCommand>
+				<viewCloseCommand type="commandLine">
+					<commandLineCommand path="" arguments=""/>
+					<ddeCommand path="" server="" topic="System" command=""/>
+				</viewCloseCommand>
+			</viewer>
+		</outputProfile>
+		<outputProfile name="LaTeX =&gt; PS" stopOnLatexError="false">
+			<texCommand execute="true" path="latex.exe" arguments="--src -interaction=nonstopmode &quot;%Wm&quot;"/>
+			<bibTexCommand execute="true" path="bibtex.exe" arguments="&quot;%bm&quot;"/>
+			<makeIndexCommand execute="true" path="makeindex.exe" arguments="&quot;%bm&quot;"/>
+			<postProcessors>
+				<processor name="DviPs" path="dvips.exe" arguments="&quot;%Bm.dvi&quot;" inputFile="" outputFile=""/>
+			</postProcessors>
+			<viewer path="ACRODIST.EXE" closeBeforeCompilation="false">
+				<viewProjectCommand type="commandLine">
+					<commandLineCommand path="ACRODIST.EXE" arguments=" &quot;%bm.ps&quot;"/>
+					<ddeCommand path="" server="" topic="System" command=""/>
+				</viewProjectCommand>
+				<viewCurrentFileCommand type="commandLine">
+					<commandLineCommand path="ACRODIST.EXE" arguments="  &quot;%bm.ps&quot;"/>
+					<ddeCommand path="" server="" topic="System" command=""/>
+				</viewCurrentFileCommand>
+				<viewCloseCommand type="commandLine">
+					<commandLineCommand path="" arguments=""/>
+					<ddeCommand path="" server="" topic="System" command=""/>
+				</viewCloseCommand>
+			</viewer>
+		</outputProfile>
+		<outputProfile name="LaTeX =&gt; PDF" stopOnLatexError="false">
+			<texCommand execute="true" path="pdflatex.exe" arguments="-interaction=nonstopmode &quot;%pm&quot;"/>
+			<bibTexCommand execute="true" path="bibtex.exe" arguments="&quot;%bm&quot;"/>
+			<makeIndexCommand execute="true" path="makeindex.exe" arguments="&quot;%bm&quot;"/>
+			<postProcessors/>
+			<viewer path="AcroRd32.exe" closeBeforeCompilation="true">
+				<viewProjectCommand type="dde">
+					<commandLineCommand path="AcroRd32.exe" arguments=" &quot;%bm.pdf&quot;"/>
+					<ddeCommand path="AcroRd32.exe" server="acroViewR10" topic="control" command="[DocOpen(&quot;%bm.pdf&quot;)][FileOpen(&quot;%bm.pdf&quot;)],"/>
+				</viewProjectCommand>
+				<viewCurrentFileCommand type="dde">
+					<commandLineCommand path="newpdf.bat" arguments="  &quot;%bm.pdf&quot;"/>
+					<ddeCommand path="AcroRd32.exe" server="acroViewR10" topic="control" command="[DocOpen(&quot;%bm.pdf&quot;)][FileOpen(&quot;%bm.pdf&quot;)]"/>
+				</viewCurrentFileCommand>
+				<viewCloseCommand type="dde">
+					<commandLineCommand path="n %.pdf" arguments="/close  &quot;%bm.pdf&quot;"/>
+					<ddeCommand path="" server="acroViewR10" topic="control" command="[DocClose(&quot;%bm.pdf&quot;)]"/>
+				</viewCloseCommand>
+			</viewer>
+		</outputProfile>
+	</outputProfileList>
+</txcop:outputProfiles>

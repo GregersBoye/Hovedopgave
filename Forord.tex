@@ -1,0 +1,28 @@
+\section{Forord}\label{sec:forord}
+Allerede på 1. semester stiftede vi bekendtskab med vores første patterns, først var det et søgepattern, men senere lærte vi også til singleton patternet. Samtidig blev vi undervist i brugen af Model-View-Controller (også kendt som 3-lags arkitektur) mønsteret, der var et arkitekturpattern. 
+  
+Der er altså tale om to slags patterns: Arkitektur-patterns og design-patterns. Arkitektur-patterns er brede løsninger, der dikterer opbygningen af hele programmet. Her kan f.eks. nævnes MVC \marginpar{\textbf{M}odel, \\ \textbf{V}iew,\\ \textbf{C}ontroller} der opdeler programmet i tre dele; ét der tager sig af domæneobjekterne i programmet (Model), hvordan domæneobjekterne arbejder sammen (Controller) og endelig hvordan programmet præsenteres (View). 
+
+På den anden side finde Design-patterns, der er mere specifikke dele af koden, der via forskellige konstruktioner, løser en række programmeringsmæssige problemer.
+
+Under vores praktiktid på EqualSums blev vi stillet over for en opgave, hvor det var nødvendigt at bruge flere patterns, nogen kendte (singleton og observer) og også nogle, for os, ukendte (f.eks. Repository-pattern \citep{ms_Repository}). Da vi blev stillet overfor opgaven til vores hovedopgave indså vi, at vi blev nødt til at sætte os ind i flere patterns. Dette ledte frem til en interesse for patterns generelt. 
+
+Larman beskriver patterns med følgende ord:
+
+\begin{quote} 
+"Experienced OO developers (and other software developers) build up a repertoire of both general principles and idiomatic solutions that guide them in the creation of software."
+\end{quote}
+\label{quote}
+\citep[p.278]{larman}
+
+Med andre ord, over tid samler udviklere en række generelle løsninger der med ganske lette ændringer passer på mange forskellige problemstillinger - det er disse løsninger der er kendt som patterns.
+
+Vi tænkte derfor, at det kunne være interessant at se nærmere på patterns og hvordan de kan bruges i et stykke software. I denne rapport vil vi dels dokumnentere vores arbejde med at udvikle et webbaseret CRM-system \marginpar{\textbf{C}ustomer \textbf{R}elationship \textbf{M}anagement} til EqualSums. Samtidig vil vi, ved at tage udgangspunkt i dette software, kigge nærmere på de patterns vi bruger, og se på patterns generelt. Vores håb er, derved at få en større forståelse for patterns, og hvordan de kan benyttes som "byggeklodser" i et stykke software.
+
+Vi har fra EqualSums' side fået til opgave at lave en webbaseret løsning, der kan håndtere kontakter fra før første kontakt, over mulige kunder til de er etablerede kunder. Der skal holdes styr på kontaktoplysninger, hvad man har foretaget sig af opkald, mails og møder og endelig skal man kunne planlægge aftaler med kunden. Kort sagt skal der konstureres et CRM-system.
+
+Samtidig skal produktet udvikles, så det er nemt at arbejde videre på for et andet team. Vi har indset, at vi på knap 10 uger ikke kan levere et kompelet CRM-system. Derfor vil vi fokusere på at udvikle i moduler der er prioriteret efter kundens (EqualSums') ønsker.
+
+Rapporten vil blive delt op i 3 dele, første del, hvor vi beskriver vores arbejdsmetode. Andet afsnit, teori-afsnittet, hvor vi vil gå i dybden med forskellige patterns, hvad de kan, hvad de ikke kan, og hvorfor vi har valgt at bruge dem. til sidst vil vi beskrive og dokumentere processen fra kravsspecifikation til færdigt produkt
+
+Det hele vil blive rundet af med en konklusion, hvor vi opsummerer rapportens indhold, og de svar vi er kommet frem til gennem processen.

@@ -1,0 +1,100 @@
+\documentclass{report}
+ \usepackage[latin1]{inputenc} %Så er encodingen på plads! Nu skal du ikke bekymre dig om at portere dine latex-dokumenter  til andre platforme.
+ 		% Sørger for at udtryk som "Chapter" og "Content" bliver oversat til dansk.
+%\linespread{2} % Giver 1½ linjeafstand i dokumentet
+
+\tolerance=3000
+%\usepackage{fancyhdr} %Denne package giver mulighed for selv at bestemme hvordan ens header skal se ud.
+
+% Jeg er ikke sikker på hvad alle de her packages gør, jeg har bare tilføjet efterhånden som jeg har brugt dem...
+% Hvis i vil vide hvad de går ud på, kan i prøve at slå dem op i jeres package-manager, eller på http://ctan.org
+
+
+%\usepackage{apacite} %Giver apa-style
+
+\usepackage[sort, numbers]{natbib}
+\usepackage{graphicx} %Denne pakke lader jeg inkludere grafikpagestyle
+
+\usepackage{eso-pic} %denne er også med til at sørge for i kan inkludere .jpg-billeder
+\usepackage{everyshi}
+\usepackage{pdfpages} %Med denne package kan i inkludere pdf-filer direkte i rapporten
+\usepackage[latin1]{inputenc} %Så er encodingen på plads! Nu skal du ikke bekymre dig om at portere dine latex-dokumenter til andre platforme.
+\usepackage[danish]{babel} 		% Sørger for at udtryk som "Chapter" og "Content" bliver oversat til dansk.
+\usepackage{latexsym}
+\usepackage{color}
+\usepackage{amsfonts}
+\usepackage{listings}
+\usepackage{epsfig}
+\usepackage{float}
+\usepackage{lscape}
+\usepackage{parskip}
+\newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
+
+\usepackage{hyperref} % sørger for at links virker/optræder fra indhold -> tekst og at url's bliver klik-bare\clubpenalty=9999
+
+\widowpenalty=9999
+\pagestyle{empty}  %headings sætter kapiteltitel i sidehovedet.
+\pagestyle{headings}
+\input{JS_definition}
+\input{CS_definition}
+
+\begin{document}
+\begin{titlepage}
+\begin{center}
+\textsc{\Large Datamatiker - UCN Aalborg}\\[0.5cm]
+\HRule \\[0.5cm]
+
+{\huge \bfseries Webbaseret CRM-system}\\[0.4cm]
+\HRule \\[2.5cm]
+\rule{.5\linewidth}{0.5mm}\\
+Peter L. Thomsen\\[2.0cm]
+
+\rule{.5\linewidth}{0.5mm}\\
+Gregers Boye-Jacobsen
+\\[3.8cm]
+
+15. Januar 2012
+
+\end{center}
+\end{titlepage}
+\addcontentsline{toc}{chapter}{Indhold}
+\tableofcontents %indsætter en indholdsfortegnelse
+
+
+\chapter{Indledning}
+\input{Forord}
+\input{Problemformulering}
+\input{Virksomhedsbeskrivelse}
+\chapter{Metode}
+\input{Udviklingsmetode}
+
+\input{Teknologier}
+
+\chapter{Arkitektur}
+\input{Arkitektur}
+\input{Teori}
+
+\chapter{Produkt}
+\input{Kravsspecifikation}
+\input{Design}
+\input{Forloeb}
+\input{accept}
+\input{Sikkerhed}
+
+\input{Evaluering}
+\input{konklusion}
+\appendix
+\newpage
+\pagenumbering{Roman}
+
+\chapter{Diagrammer}
+Diagrammer kan findes på den vedhæftede cd sammen med kildekode og en elektronisk kopi af denne rapport.
+
+%\addcontentsline{toc}{chapter}{Figurer}
+%\listoffigures
+
+\newpage
+\addcontentsline{toc}{chapter}{Litteratur}
+\bibliography{litteratur} %Indsæt navnet på jeres BiBtEx fil her (Uden extension)
+\bibliographystyle{plainnat}
+\end{document}

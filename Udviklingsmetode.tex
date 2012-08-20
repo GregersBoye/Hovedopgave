@@ -1,0 +1,61 @@
+
+\section{Udviklingsmetode}
+Her vil vi beskrive den udviklingsmetode vi har valgt at bruge til vores projekt og hvorfor vi har fravalgt andre.
+Som det første har vi undersøgt hvilken metode der vil passe bedst til vores projekt, til det har vi gjort brug af Berry Boehm's stjernemodel (fig \ref{fig:Stjernemodel}). Modellen bruges til at vurdere om man bør bruge en agil eller plandreven metode, eller om man skal finde en middelvej. Det gør den ud fra 5 faktorer som man skal svare på i forhold til det projekt man skal til at starte på. Des tættere midten af diagrammet man sætter sine krydser, des mere en agil metode har man brug for. Det samme gør sig gældende den anden vej, hvor, jo længere man kommer ud af akserne, jo mere bør man gøre brug af en mere plandreven metode.
+
+\begin{figure}
+	\centering
+		\includegraphics[width=0.75\textwidth]{star}
+	\caption{Stjernemodellen}
+	\label{fig:Stjernemodel}
+\end{figure}
+
+\textbf{Personnel:} På denne akse vises hvor erfarent et udviklerteam er. Da ingen i gruppen har nogen særlig stor erhvervsmæssig erfaring på trods af, at vi har lidt kendskab til teknologierne fra skolen, er vores vurdering at den vil ligge mellem 0-35 og 10-30. Hvilket peger hen imod en agil metode.
+
+\textbf{Dynamism:} Her bestemmes hvor dynamisk man har behov for at være. Efter de første par møder med EqualSums blev det hurtigt klart for os at der ville komme mange ændringer undervejs. Mange kunder har svært ved at sætte ord på hvad de egentlig gerne vil have til at starte med. Derudover er der flere forskellige vi snakker med som står for hvert deres område. Det betyder vi ligger omkring de 30 som peger på en rimelig agil metode.
+
+\textbf{Culture:} Her ser man på hvordan teamet trives bedst. Skal der være regler og procedure for alle, eller har man mere frihed til selv at vælge. Vores team har det godt med et forholdsvist frit arbejdsmiljø. Når vi ser på EqualSums hvor vi laver programmet er der også meget stor frihed og medarbejderne i virksomheden trives herunder. Derfor er det kun naturligt for os at ligger os tæt på de 90 som igen peger på en agil metode.
+
+\textbf{Size:} Her kigger man på hvor stort ens team er. Da vi arbejder i en lille to mandsgruppe er den nem at sætte på. Hvilket igen vil sige det ligger sig op af en agil metode. Store grupper kan blandt andet have svært ved at kommunikere og koordinere et stort projekt hvor imod et lille hold nemmere kan styre hvem der laver hvad. 
+
+\textbf{Criticality:} Criticality afgøres af hvor store konsekvenser fejl i systemet vil have. I vores system kommer fejl ikke til at have den store betydning. De kommer hverken til at koste menneskeliv eller vanvittige økonomiske nedture for firmaet. Derfor lægger vi os ind mod midten igen og dermed en agil metode.
+
+\subsection{Anbefalet metode valg}
+Ud fra vores analyse i foregående kapitel ved hjælp af stjernemodellen, er det tydligt at se vi ligger os op af en agil metode. Som metode har vi valgt at bruge Scrum. Vi har allerede erfaring med Scrum fra vores andre projekter samt fra vores praktikophold. Vi syntes derfor scrum er et oplagt metodevalg til vores projekt. Der vil dog i projektet også blive benyttet elementer fra andre metoder, da agil udvikling netop handler om at tilpasse arbejdsformen, alt efter behov. Vi har derfor valgt at tage nogle rutiner med fra nogen af de andre metoder. Fra UP har vi valgt at gøre brug af domænemodellen, samt vores databasediagram. Dette giver et godt fundament, især som mindre erfarne. Derudover har vi også lånt værktøjerne, refactoring og testing som de primære fra XP, men også pair programmering, fælles kode og kodestandarder vil blive brugt. 
+
+En af grundene til vi ikke har valgt at arbejde ud fra en UP metode, er blandt andet stjernemodellen, men i høj grad også vores korte projektperiode. Da vi har et meget begrænset tidsrum til at få lavet programmet, er der ganske enkelt ikke tid til at analysere så meget. Derudover ligger det også klart, at der kommer mange udvidelser til systemet da vi igen på grund af den begrænsede tid er blevet nødsaget til at afgrænse problemområdet. Det vil sige, at der er mange opgaver vi slet ikke har med i dette oplæg, som skal laves bagefter.
+
+
+\subsection{Scrum}
+Scrum er en agil udviklingsmetode skabt tilbage i 90'eren. Det er et interaktivt og inkrementalt framework som hurtigt er blevet meget populært blandt udviklere, da det giver en stor frihed, men samtidig sætter nogle fast rammer for arbejdsgangen.
+
+\subsubsection{Roller}
+I Scrum vil man støde på rollerne Scrum Master, Produkt Owner og Scrum Team. Vores Produkt Owner er Martin Skov Kristensen og er salgschef hos Equalsums. Det er ham der står for projektet sammen med os, så det var naturligt at give ham den rolle, som blandt andet indebærer at prioritere user stories og stå til rådighed når der er spørgsmål omkring produktet. Som Scrum master har vi valgt Peter. Valget faldt på Peter fordi han havde erfaring med programmet ScrumDesk som vi bruger til at styre vores backlog, sprints, osv. Gregers er en del af selve Scrum teamet som udvikler. Peter indgår selvfølgelig også som en del af teamet og udvikler sammen med Gregers.
+
+\subsubsection{Strukturen}
+Vi arbejder med 14 dags(10 arbejdsdage) sprints hvor vi har 2½ arbejdsdag til udvikling på systemet. Grunden til vi ikke har mere er, at der skal være tid til rapportskrivning. Vi har en velocity på 0,7 hvilket betyder vi har 53,2 effektive timer til hvert sprint.
+  
+Da vi altid sidder ude i virksomheden når vi udvikler på produktet, indgår vi også i deres Scrum holds daglige Scrum møder, og hvis der ellers er nogen fælles møder. Internt i vi vores projekt holder vi også et dagligt Scrum møde, hvor vi kort fortæller hvad vi har lavet og hvad vi har tænkt os at gå i gang med næste gang. Derudover holder vi også et sprint review møde med Martin (produktowneren) hvor vi viser det frem vi har lavet i sprintet. Det gør vi for at sikre at det vi har lavet lever op til Martins forventninger. Scrum retrospective holder vi løbende dels fordi vi kun er to på holdet og hele tiden snakker sammen under forløbet, og dels fordi man har en tendens til at glemme hvad der gik dårlig og især hvad gik godt.
+
+\subsection{Tests}
+For at sikre en høj kvalitet i vores program har vi valgt at gøre brug af Unit Test, Integrationsest og til sidst Acceptance Test. Udover at være med til at højne kvaliteten i koden, sikrer disse tests også, at koden virker, og rent faktisk gør det den skal gøre. Der drages også fordel ved at bruge de to først nævnte test når der laves refactoring. Når der er blevet refactoret i koden er det nemt og hurtigt at teste om den stadig virker som den skal, ved at køre disse tests.
+Udover at hjælpe udviklerne, giver det også ejerne et gennemteste produkt, som vil være i højere kvalitet. 
+\subsubsection{Unittests}
+Der er valgt at unitteste enkelte metoder i systemet fremfor at bruge det som en test-dreven proces. Dette gøres, fordi den nødvendige erfaring med at køre et test-drevet projekt mangler, og derfor vil det bliver for stor en tidsrøver.
+
+Da der er gjort meget ud af at designe MVC arkitekturen så systemer udviklet i dette er nemme at teste på, har vi rig mulighed for at teste store dele af vores system. \citep{UnitTestMVC}
+
+I systemet testes blandt andet om der modtages de rigtige Views, og om den medsendte ViewModel er korrekt. En ViewModel er data man sender til sit View, ofte vil det være en klasse, eller en IEnumerable. IEnumerable er et Interface der gør det muligt at bruge et for-each loop på vores collection af objekter. 
+
+I forbindelse med at teste metoder i vores controller lag, er der implementeret et Repository Pattern, til at hjælpe med at isolere Unit testene. Hvis man bruger den database man sidder og udvikler på kan man ikke længere stole på disse resultateter. Dette skyldes, at indholdet af databasen kan blive ændret i forbindelse med tests hvor der skrives til databasen. Derfor mocker man de data så de altid er de samme, så forudsætningen for testen altid er den samme.
+Repository Pattern og hvordan vi præcist bruger unit test i den forbindelse kan der læses mere om i et senere afsnit. 
+
+Når der er blevet refactoret en eller flere metoder er det hurtigt og nemt at teste om de forskellige Views og ViewModels stadig er rigtige. Derudover testes metoderne selvfølgelig også, så man er sikker på de stadig gør det de skal, selvom de eventuelt er blevet skrevet om. Det sikrer os imod der pludselig er dele af systemet der ikke længere virker.
+ 
+\subsubsection{Integrationstests}
+Udover unittests er der også valgt at lave Integrationstests. Her testes flere dele af systemet sammen, for at sikre sig at de forskellige lag snakker ordenligt sammen.
+
+I systemet er der lavet integration tests på nogle User Stories, hvor der testes i GUI og hele vejen ned til DB-laget. På den måde bliver alle lagene testet fra top til bund. Her er det igen nemt at teste om en hel userstory stadig virker, hvis der for eksempel skulle komme ændringer fra Produkt Owneren, så man bliver nødt til at refactor en eller flere af metoderne. 
+
+\subsubsection{Acceptancetests}
+Sidst vil der blive lavet en Acceptancetest sammen med Produkt Owner, og eventuelt nogen af brugerne på systemet. Det gøres fordi det er kunden der bedst ved hvordan systemet skal virke og derfor er det en kæmpe hjælp af få dem til at teste systemet. På den måde er man sikker på, at det lever op til deres forventninger.
